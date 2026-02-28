@@ -109,7 +109,7 @@ const Home = ({sess,objs,chk,go}) => {
     <div style={{padding:"16px 16px 100px"}}>
       <div style={{display:"flex",gap:10,marginBottom:16}}>
         <Stat l="Cette sem." v={wk} d="M12 22a10 10 0 110-20 10 10 0 010 20zM8 12l2.5 2.5L16 9" c={C.blue} />
-        <Stat l="Série" v={`${streak}j`} d={["M12 22c0-4.4 3-6.5 3-10a3 3 0 00-6 0c0 3.5 3 5.6 3 10","M9.5 14c0-2 1-3 1.5-5"]} c={C.red} />
+        <Stat l="Série" v={`${streak}j`} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" c={C.red} />
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
       </div>
       {lastM && <div style={card}>
