@@ -31,12 +31,15 @@ const iBrain="M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 
 const Header = ({title,sub}) => (
   <div style={{background:`linear-gradient(135deg,${C.navy},${C.blue})`,padding:"20px 20px 24px",borderRadius:"0 0 24px 24px",color:"#fff",position:"relative",overflow:"hidden"}}>
     <div style={{position:"absolute",bottom:-8,right:-10,opacity:.08,fontSize:120}}>⚓</div>
-    <div style={{display:"flex",alignItems:"center",gap:12}}>
-      <img src={LOGO} alt="USC" style={{width:44,height:52,objectFit:"contain"}} />
-      <div>
-        <div style={{fontSize:20,fontWeight:800,letterSpacing:-.5}}>{title}</div>
-        {sub && <div style={{fontSize:13,opacity:.8,marginTop:2}}>{sub}</div>}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <img src={LOGO} alt="USC" style={{width:44,height:52,objectFit:"contain"}} />
+        <div>
+          <div style={{fontSize:20,fontWeight:800,letterSpacing:-.5}}>{title}</div>
+          {sub && <div style={{fontSize:13,opacity:.8,marginTop:2}}>{sub}</div>}
+        </div>
       </div>
+      <img src="/titouan.jpeg" alt="Titouan" style={{width:48,height:48,borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(255,255,255,0.4)"}} />
     </div>
   </div>
 );
