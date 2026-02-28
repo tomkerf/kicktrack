@@ -52,7 +52,7 @@ const TabBar = ({tab,set}) => {
     {id:"home",d:["M3 12L12 3l9 9","M5 10v10a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1V10"],l:"Accueil"},
     {id:"train",d:"M22 12h-4l-3 9L9 3l-3 9H2",l:"Entraîne."},
     {id:"obj",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 12m-1 0a1 1 0 102 0 1 1 0 10-2 0"],l:"Objectifs"},
-    {id:"mental",d:["M9.5 3A6.5 6.5 0 0116 9.5c0 3.6-2 5.9-3.5 7h-1C10 15.4 8 13.1 8 9.5A6.5 6.5 0 019.5 3z","M9.5 21h5","M12 17v4"],l:"Mental"},
+    {id:"mental",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Mental"},
     {id:"stats",d:"M18 20V10M12 20V4M6 20v-6",l:"Stats"},
   ];
   return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(15,23,42,0.7)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
