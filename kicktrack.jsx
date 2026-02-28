@@ -63,8 +63,9 @@ const TabBar = ({tab,set}) => {
   </div>;
 };
 
-const Stat = ({l,v,e,c=C.blue}) => <div style={{background:C.w,borderRadius:14,padding:"14px 12px",flex:1,boxShadow:"0 1px 3px rgba(0,0,0,.06)",textAlign:"center",borderTop:`3px solid ${c}`}}>
-  <div style={{fontSize:22,marginBottom:4}}>{e}</div>
+const StatIco = ({d,c}) => <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}</svg>;
+const Stat = ({l,v,d,c=C.blue}) => <div style={{...glass,borderRadius:14,padding:"14px 12px",flex:1,textAlign:"center",borderTop:`3px solid ${c}`}}>
+  <div style={{marginBottom:6,display:"flex",justifyContent:"center"}}><StatIco d={d} c={c}/></div>
   <div style={{fontSize:22,fontWeight:800,color:C.g900}}>{v}</div>
   <div style={{fontSize:10,color:C.g400,fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>{l}</div>
 </div>;
@@ -107,9 +108,9 @@ const Home = ({sess,objs,chk,go}) => {
     <Header title="KickTrack" sub="Titouan Kerfendal — U.S. Concarneau" />
     <div style={{padding:"16px 16px 100px"}}>
       <div style={{display:"flex",gap:10,marginBottom:16}}>
-        <Stat l="Cette sem." v={wk} e="⚽" c={C.blue} />
-        <Stat l="Série" v={`${streak}j`} e="🔥" c={C.red} />
-        <Stat l="Objectifs" v={actObj} e="🎯" c={C.navy} />
+        <Stat l="Cette sem." v={wk} d="M12 22a10 10 0 110-20 10 10 0 010 20zM8 12l2.5 2.5L16 9" c={C.blue} />
+        <Stat l="Série" v={`${streak}j`} d={["M12 22c0-4.4 3-6.5 3-10a3 3 0 00-6 0c0 3.5 3 5.6 3 10","M9.5 14c0-2 1-3 1.5-5"]} c={C.red} />
+        <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
       </div>
       {lastM && <div style={card}>
         <div style={lbl}>Dernier état mental</div>
@@ -299,9 +300,9 @@ const Stats = ({sess,chk,objs}) => {
     <Header title="Statistiques" sub="Ta progression" />
     <div style={{padding:"16px 16px 100px"}}>
       <div style={{display:"flex",gap:10,marginBottom:16}}>
-        <Stat l="Séances" v={tot} e="⚽" c={C.blue} />
-        <Stat l="Minutes" v={totMin} e="⏱️" c={C.navy} />
-        <Stat l="Int. moy." v={avgI} e="💪" c={C.red} />
+        <Stat l="Séances" v={tot} d="M12 22a10 10 0 110-20 10 10 0 010 20zM8 12l2.5 2.5L16 9" c={C.blue} />
+        <Stat l="Minutes" v={totMin} d="M12 22a10 10 0 110-20 10 10 0 010 20zM12 6v6l4 2" c={C.navy} />
+        <Stat l="Int. moy." v={avgI} d={["M12 8v4","M12 16h.01","M3 12a9 9 0 1018 0A9 9 0 003 12z"]} c={C.red} />
       </div>
       <MiniChart data={wkD} label="Séances / semaine (4 dern.)" c={C.blue} />
       {moodD.length>0&&<MiniChart data={moodD} label="Évolution humeur" c={C.red} />}
