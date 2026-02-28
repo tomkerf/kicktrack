@@ -17,9 +17,10 @@ const moods = [{e:"😤",l:"Frustré",v:1},{e:"😕",l:"Moyen",v:2},{e:"😐",l:
 const tTypes = [{id:"match",l:"Match",e:"⚽"},{id:"collectif",l:"Collectif",e:"👥"},{id:"individuel",l:"Individuel",e:"🏃"},{id:"physique",l:"Physique",e:"💪"},{id:"technique",l:"Technique",e:"🎯"},{id:"mental_t",l:"Mental",e:"🧠"}];
 const objCats = [{id:"technique",l:"Technique",e:"🎯"},{id:"physique",l:"Physique",e:"💪"},{id:"tactique",l:"Tactique",e:"🧩"},{id:"mental",l:"Mental",e:"🧠"}];
 
-const card = {background:C.w,borderRadius:16,padding:16,marginBottom:12,boxShadow:"0 1px 3px rgba(0,0,0,0.08)"};
-const btnP = {background:`linear-gradient(135deg,${C.blue},${C.navy})`,color:C.w,border:"none",borderRadius:12,padding:"12px 24px",fontSize:15,fontWeight:600,cursor:"pointer",width:"100%"};
-const inp = {width:"100%",padding:"10px 14px",border:`1.5px solid ${C.g200}`,borderRadius:10,fontSize:14,background:C.g50,boxSizing:"border-box",outline:"none",fontFamily:"inherit"};
+const glass = {background:"rgba(255,255,255,0.06)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)"};
+const card = {...glass,borderRadius:20,padding:16,marginBottom:12};
+const btnP = {...glass,background:"rgba(37,99,235,0.6)",color:"#fff",borderRadius:14,padding:"12px 24px",fontSize:15,fontWeight:600,cursor:"pointer",width:"100%",boxShadow:"0 4px 24px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.15)"};
+const inp = {width:"100%",padding:"10px 14px",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,fontSize:14,background:"rgba(255,255,255,0.05)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",color:"#f1f5f9",boxSizing:"border-box",outline:"none",fontFamily:"inherit"};
 const lbl = {fontSize:12,fontWeight:600,color:C.g500,textTransform:"uppercase",letterSpacing:.8,marginBottom:4,display:"block"};
 
 const Ico = ({d,s=20,c=C.w}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
@@ -54,7 +55,7 @@ const TabBar = ({tab,set}) => {
     {id:"mental",d:["M9.5 3A6.5 6.5 0 0116 9.5c0 3.6-2 5.9-3.5 7h-1C10 15.4 8 13.1 8 9.5A6.5 6.5 0 019.5 3z","M9.5 21h5","M12 17v4"],l:"Mental"},
     {id:"stats",d:"M18 20V10M12 20V4M6 20v-6",l:"Stats"},
   ];
-  return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:C.w,borderTop:`1px solid ${C.g200}`,display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
+  return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(15,23,42,0.7)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
     {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:"none",border:"none",padding:"4px 8px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .2s"}}>
       <TabIco d={t.d} active={tab===t.id}/>
       <span style={{fontSize:10,fontWeight:600,color:tab===t.id?C.blue:C.g400}}>{t.l}</span>
@@ -340,13 +341,25 @@ export default function KickTrack() {
     <div style={{color:C.w,fontSize:24,fontWeight:800}}>KickTrack</div>
     <div style={{color:"rgba(255,255,255,.6)",fontSize:13}}>Chargement...</div>
   </div>;
-  return <div style={{maxWidth:480,margin:"0 auto",background:C.g50,minHeight:"100vh",fontFamily:"'Nunito','Segoe UI',system-ui,sans-serif",position:"relative"}}>
+  return <div style={{maxWidth:480,margin:"0 auto",background:C.g50,minHeight:"100vh",fontFamily:"'Nunito','Segoe UI',system-ui,sans-serif",position:"relative",overflow:"hidden"}}>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    {tab==="home"&&<Home sess={sess} objs={objs} chk={chk} go={setTab}/>}
-    {tab==="train"&&<Train sess={sess} setSess={setSess}/>}
-    {tab==="obj"&&<Obj objs={objs} setObjs={setObjs}/>}
-    {tab==="mental"&&<Mental chk={chk} setChk={setChk}/>}
-    {tab==="stats"&&<Stats sess={sess} chk={chk} objs={objs}/>}
+    <style>{`
+      @keyframes blob1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-30px) scale(1.1)} 66%{transform:translate(-20px,20px) scale(0.95)} }
+      @keyframes blob2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,30px) scale(1.05)} 66%{transform:translate(30px,-40px) scale(1.1)} }
+      @keyframes blob3 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(20px,50px) scale(0.9)} 66%{transform:translate(-40px,-20px) scale(1.05)} }
+    `}</style>
+    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,maxWidth:480,margin:"0 auto",overflow:"hidden",zIndex:0,pointerEvents:"none"}}>
+      <div style={{position:"absolute",top:"-80px",left:"-60px",width:280,height:280,borderRadius:"50%",background:"rgba(37,99,235,0.25)",filter:"blur(60px)",animation:"blob1 8s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",top:"30%",right:"-80px",width:240,height:240,borderRadius:"50%",background:"rgba(124,58,237,0.2)",filter:"blur(60px)",animation:"blob2 10s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",bottom:"20%",left:"-40px",width:200,height:200,borderRadius:"50%",background:"rgba(6,182,212,0.15)",filter:"blur(50px)",animation:"blob3 12s ease-in-out infinite"}}/>
+    </div>
+    <div style={{position:"relative",zIndex:1}}>
+      {tab==="home"&&<Home sess={sess} objs={objs} chk={chk} go={setTab}/>}
+      {tab==="train"&&<Train sess={sess} setSess={setSess}/>}
+      {tab==="obj"&&<Obj objs={objs} setObjs={setObjs}/>}
+      {tab==="mental"&&<Mental chk={chk} setChk={setChk}/>}
+      {tab==="stats"&&<Stats sess={sess} chk={chk} objs={objs}/>}
+    </div>
     <TabBar tab={tab} set={setTab}/>
   </div>;
 }
