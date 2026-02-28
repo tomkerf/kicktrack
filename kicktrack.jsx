@@ -44,12 +44,20 @@ const Header = ({title,sub}) => (
   </div>
 );
 
+const TabIco = ({d,active}) => <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={active?C.blue:C.g400} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}</svg>;
+
 const TabBar = ({tab,set}) => {
-  const ts=[{id:"home",e:"🏠",l:"Accueil"},{id:"train",e:"⚽",l:"Entraîne."},{id:"obj",e:"🎯",l:"Objectifs"},{id:"mental",e:"🧠",l:"Mental"},{id:"stats",e:"📊",l:"Stats"}];
+  const ts=[
+    {id:"home",d:["M3 12L12 3l9 9","M5 10v10a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1V10"],l:"Accueil"},
+    {id:"train",d:"M22 12h-4l-3 9L9 3l-3 9H2",l:"Entraîne."},
+    {id:"obj",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 12m-1 0a1 1 0 102 0 1 1 0 10-2 0"],l:"Objectifs"},
+    {id:"mental",d:["M9.5 3A6.5 6.5 0 0116 9.5c0 3.6-2 5.9-3.5 7h-1C10 15.4 8 13.1 8 9.5A6.5 6.5 0 019.5 3z","M9.5 21h5","M12 17v4"],l:"Mental"},
+    {id:"stats",d:"M18 20V10M12 20V4M6 20v-6",l:"Stats"},
+  ];
   return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:C.w,borderTop:`1px solid ${C.g200}`,display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
-    {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:"none",border:"none",padding:"4px 8px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,opacity:tab===t.id?1:.4,transition:"all .2s"}}>
-      <span style={{fontSize:20}}>{t.e}</span>
-      <span style={{fontSize:10,fontWeight:600,color:tab===t.id?C.blue:C.g500}}>{t.l}</span>
+    {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:"none",border:"none",padding:"4px 8px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .2s"}}>
+      <TabIco d={t.d} active={tab===t.id}/>
+      <span style={{fontSize:10,fontWeight:600,color:tab===t.id?C.blue:C.g400}}>{t.l}</span>
     </button>)}
   </div>;
 };
