@@ -13,9 +13,27 @@ const fmtDate = d => new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"nu
 const daysSince = d => Math.floor((Date.now()-new Date(d+"T12:00:00").getTime())/864e5);
 const uid = () => Math.random().toString(36).slice(2,10);
 
-const moods = [{e:"😤",l:"Frustré",v:1},{e:"😕",l:"Moyen",v:2},{e:"😐",l:"Neutre",v:3},{e:"😊",l:"Bien",v:4},{e:"🔥",l:"En feu!",v:5}];
-const tTypes = [{id:"match",l:"Match",e:"⚽"},{id:"collectif",l:"Collectif",e:"👥"},{id:"individuel",l:"Individuel",e:"🏃"},{id:"physique",l:"Physique",e:"💪"},{id:"technique",l:"Technique",e:"🎯"},{id:"mental_t",l:"Mental",e:"🧠"}];
-const objCats = [{id:"technique",l:"Technique",e:"🎯"},{id:"physique",l:"Physique",e:"💪"},{id:"tactique",l:"Tactique",e:"🧩"},{id:"mental",l:"Mental",e:"🧠"}];
+const moods = [
+  {d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 15s1.5-2 4-2 4 2 4 2","M8 8l2 1.5M16 8l-2 1.5","M9 10h.01","M15 10h.01"],l:"Frustré",v:1},
+  {d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M9 14s1-1 3-1 3 1 3 1","M9 9h.01","M15 9h.01"],l:"Moyen",v:2},
+  {d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M9 13h6","M9 9h.01","M15 9h.01"],l:"Neutre",v:3},
+  {d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Bien",v:4},
+  {d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M7 13s2 4 5 4 5-4 5-4","M8 8h.01","M16 8h.01"],l:"En feu!",v:5},
+];
+const tTypes = [
+  {id:"match",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 12l2.5 2.5L16 9"],l:"Match"},
+  {id:"collectif",d:["M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2","M9 11a4 4 0 100-8 4 4 0 000 8z","M23 21v-2a4 4 0 00-3-3.87","M16 3.13a4 4 0 010 7.75"],l:"Collectif"},
+  {id:"individuel",d:["M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2","M12 11a4 4 0 100-8 4 4 0 000 8z"],l:"Individuel"},
+  {id:"physique",d:"M22 12h-4l-3 9L9 3l-3 9H2",l:"Physique"},
+  {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 12m-1 0a1 1 0 102 0 1 1 0 10-2 0"],l:"Technique"},
+  {id:"mental_t",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Mental"},
+];
+const objCats = [
+  {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"],l:"Technique"},
+  {id:"physique",d:"M22 12h-4l-3 9L9 3l-3 9H2",l:"Physique"},
+  {id:"tactique",d:["M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z","M12 2v20M2 12h20"],l:"Tactique"},
+  {id:"mental",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Mental"},
+];
 
 const glass = {background:"rgba(255,255,255,0.06)",backdropFilter:"blur(40px) saturate(200%)",WebkitBackdropFilter:"blur(40px) saturate(200%)",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1)"};
 const card = {...glass,borderRadius:24,padding:"18px 16px",marginBottom:12};
@@ -24,6 +42,9 @@ const inp = {width:"100%",padding:"10px 14px",border:"1px solid rgba(255,255,255
 const lbl = {fontSize:12,fontWeight:600,color:C.g500,textTransform:"uppercase",letterSpacing:.8,marginBottom:4,display:"block"};
 
 const Ico = ({d,s=20,c=C.w}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+const moodColors = {1:"#ef4444",2:"#f97316",3:"#94a3b8",4:"#22c55e",5:"#f59e0b"};
+const MoodIco = ({d,v,s=28}) => { const c=moodColors[v]||C.g400; return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}</svg>; };
+const TypeIco = ({d,s=24,c=C.blue}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}</svg>;
 const iPlus="M12 5v14M5 12h14";
 const iTrash="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6";
 const iCheck="M20 6L9 17l-5-5";
@@ -72,9 +93,9 @@ const Stat = ({l,v,d,c=C.blue}) => <div style={{background:`linear-gradient(145d
 </div>;
 
 const MoodPick = ({v,set}) => <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-  {moods.map(m=><button key={m.v} onClick={()=>set(m.v)} style={{background:v===m.v?C.blueP:C.g100,border:v===m.v?`2px solid ${C.blue}`:"2px solid transparent",borderRadius:12,padding:"8px 6px",cursor:"pointer",textAlign:"center",minWidth:52,transition:"all .2s"}}>
-    <div style={{fontSize:24}}>{m.e}</div>
-    <div style={{fontSize:9,color:C.g500,marginTop:2,fontWeight:600}}>{m.l}</div>
+  {moods.map(m=><button key={m.v} onClick={()=>set(m.v)} style={{background:v===m.v?`${moodColors[m.v]}18`:"rgba(255,255,255,0.04)",border:v===m.v?`2px solid ${moodColors[m.v]}60`:"2px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"10px 6px",cursor:"pointer",textAlign:"center",minWidth:52,transition:"all .2s"}}>
+    <div style={{display:"flex",justifyContent:"center"}}><MoodIco d={m.d} v={m.v} s={26}/></div>
+    <div style={{fontSize:9,color:v===m.v?moodColors[m.v]:C.g500,marginTop:4,fontWeight:700}}>{m.l}</div>
   </button>)}
 </div>;
 
@@ -115,9 +136,9 @@ const Home = ({sess,objs,chk,go}) => {
       </div>
       {lastM && <div style={card}>
         <div style={lbl}>Dernier état mental</div>
-        <div style={{fontSize:32,textAlign:"center",marginTop:4}}>
-          {moods.find(m=>m.v===lastM.mood)?.e||"😐"}
-          <span style={{fontSize:14,color:C.g500,marginLeft:8}}>{moods.find(m=>m.v===lastM.mood)?.l}</span>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginTop:8}}>
+          {(()=>{const m=moods.find(x=>x.v===lastM.mood)||moods[2];return <MoodIco d={m.d} v={m.v} s={40}/>;})()}
+          <span style={{fontSize:16,color:C.g700,fontWeight:700}}>{moods.find(m=>m.v===lastM.mood)?.l}</span>
         </div>
       </div>}
       <div style={card}>
@@ -126,11 +147,11 @@ const Home = ({sess,objs,chk,go}) => {
           <button onClick={()=>go("train")} style={{background:"none",border:"none",color:C.blue,fontSize:13,fontWeight:600,cursor:"pointer"}}>Voir tout →</button>
         </div>
         {!sess.length?<div style={{textAlign:"center",padding:20,color:C.g400}}>
-          <div style={{fontSize:32,marginBottom:8}}>⚽</div>Aucune séance — c'est parti!
+          <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><TypeIco d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 12l2.5 2.5L16 9"]} s={36} c={C.g300}/></div>Aucune séance — c'est parti!
         </div>:[...sess].reverse().slice(0,3).map(s=>{
           const t=tTypes.find(x=>x.id===s.type);
           return <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${C.g100}`}}>
-            <span style={{fontSize:24}}>{t?.e||"⚽"}</span>
+            <TypeIco d={t?.d||tTypes[0].d} s={24} c={C.blueL}/>
             <div style={{flex:1}}>
               <div style={{fontSize:14,fontWeight:600,color:C.g900}}>{t?.l||s.type}</div>
               <div style={{fontSize:12,color:C.g400}}>{fmtDate(s.date)} · {s.dur} min</div>
@@ -163,9 +184,9 @@ const Train = ({sess,setSess}) => {
         <button onClick={()=>setAdd(true)} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16}}>
           <Ico d={iPlus} s={18}/> Ajouter une séance
         </button>
-        {!sess.length?<div style={{textAlign:"center",padding:40,color:C.g400}}><div style={{fontSize:48,marginBottom:12}}>⚽</div>Commence à logger!</div>
+        {!sess.length?<div style={{textAlign:"center",padding:40,color:C.g400}}><div style={{display:"flex",justifyContent:"center",marginBottom:12}}><TypeIco d={tTypes[0].d} s={48} c={C.g300}/></div>Commence à logger!</div>
         :[...sess].reverse().map(s=>{const t=tTypes.find(x=>x.id===s.type);return <div key={s.id} style={{...card,display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontSize:28}}>{t?.e||"⚽"}</span>
+          <TypeIco d={t?.d||tTypes[0].d} s={28} c={C.blueL}/>
           <div style={{flex:1}}>
             <div style={{fontWeight:700,fontSize:15,color:C.g900}}>{t?.l}</div>
             <div style={{fontSize:12,color:C.g400}}>{fmtDate(s.date)} · {s.dur} min · Intensité {s.int}/10</div>
@@ -179,7 +200,7 @@ const Train = ({sess,setSess}) => {
           <span style={lbl}>Type</span>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginTop:4}}>
             {tTypes.map(t=><button key={t.id} onClick={()=>sF(x=>({...x,type:t.id}))} style={{background:f.type===t.id?C.blueP:C.g50,border:f.type===t.id?`2px solid ${C.blue}`:`2px solid ${C.g200}`,borderRadius:10,padding:"8px 4px",cursor:"pointer",textAlign:"center"}}>
-              <div style={{fontSize:20}}>{t.e}</div>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:2}}><TypeIco d={t.d} s={20} c={f.type===t.id?C.blue:C.g400}/></div>
               <div style={{fontSize:10,fontWeight:600,color:f.type===t.id?C.blue:C.g500}}>{t.l}</div>
             </button>)}
           </div>
@@ -210,11 +231,11 @@ const Obj = ({objs,setObjs}) => {
         <button onClick={()=>setAdd(true)} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16}}>
           <Ico d={iPlus} s={18}/> Nouvel objectif
         </button>
-        {!objs.length?<div style={{textAlign:"center",padding:40,color:C.g400}}><div style={{fontSize:48,marginBottom:12}}>🎯</div>Définis tes premiers objectifs!</div>
+        {!objs.length?<div style={{textAlign:"center",padding:40,color:C.g400}}><div style={{display:"flex",justifyContent:"center",marginBottom:12}}><TypeIco d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 2v3M12 19v3M2 12H5M19 12h3"]} s={48} c={C.g300}/></div>Définis tes premiers objectifs!</div>
         :<>{objs.filter(o=>!o.done).map(o=>{const c=objCats.find(x=>x.id===o.cat);return <div key={o.id} style={{...card,display:"flex",alignItems:"flex-start",gap:10}}>
           <button onClick={()=>tog(o.id)} style={{width:26,height:26,borderRadius:8,border:`2px solid ${C.blue}`,background:"none",cursor:"pointer",flexShrink:0,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center"}}/>
           <div style={{flex:1}}>
-            <div style={{fontWeight:600,fontSize:14,color:C.g900}}>{c?.e} {o.text}</div>
+            <div style={{fontWeight:600,fontSize:14,color:C.g900,display:"flex",alignItems:"center",gap:6}}>{c&&<TypeIco d={c.d} s={14} c={C.blue}/>}{o.text}</div>
             <div style={{fontSize:11,color:C.g400,marginTop:2}}>{c?.l}{o.dl?` · ${fmtDate(o.dl)}`:""}</div>
           </div>
           <button onClick={()=>del(o.id)} style={{background:"none",border:"none",cursor:"pointer",padding:4}}><Ico d={iTrash} s={14} c={C.g300}/></button>
@@ -223,7 +244,7 @@ const Obj = ({objs,setObjs}) => {
           <div style={{...lbl,marginTop:16,marginBottom:8,color:C.g400}}>✅ Accomplis ({objs.filter(o=>o.done).length})</div>
           {objs.filter(o=>o.done).map(o=>{const c=objCats.find(x=>x.id===o.cat);return <div key={o.id} style={{...card,opacity:.6,display:"flex",alignItems:"center",gap:10}}>
             <button onClick={()=>tog(o.id)} style={{width:26,height:26,borderRadius:8,border:`2px solid ${C.blue}`,background:C.blue,cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}><Ico d={iCheck} s={14}/></button>
-            <span style={{fontSize:14,color:C.g500,textDecoration:"line-through"}}>{c?.e} {o.text}</span>
+            <span style={{fontSize:14,color:C.g500,textDecoration:"line-through",display:"flex",alignItems:"center",gap:6}}>{c&&<TypeIco d={c.d} s={14} c={C.g400}/>}{o.text}</span>
           </div>;})}
         </>}</>}
       </>:<div style={card}>
@@ -232,7 +253,7 @@ const Obj = ({objs,setObjs}) => {
           <span style={lbl}>Catégorie</span>
           <div style={{display:"flex",gap:6,marginTop:4}}>
             {objCats.map(c=><button key={c.id} onClick={()=>sF(x=>({...x,cat:c.id}))} style={{background:f.cat===c.id?C.blueP:C.g50,border:f.cat===c.id?`2px solid ${C.blue}`:`2px solid ${C.g200}`,borderRadius:10,padding:"8px 10px",cursor:"pointer",flex:1,textAlign:"center"}}>
-              <div style={{fontSize:18}}>{c.e}</div>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:2}}><TypeIco d={c.d} s={18} c={f.cat===c.id?C.blue:C.g400}/></div>
               <div style={{fontSize:9,fontWeight:600,color:f.cat===c.id?C.blue:C.g500}}>{c.l}</div>
             </button>)}
           </div>
@@ -260,11 +281,11 @@ const Mental = ({chk,setChk}) => {
         <button onClick={()=>setAdd(true)} style={{...btnP,background:`linear-gradient(135deg,${C.red},${C.navy})`,display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16}}>
           <Ico d={iBrain} s={18}/> Nouveau check-in
         </button>
-        {!chk.length?<div style={{textAlign:"center",padding:40,color:C.g400}}><div style={{fontSize:48,marginBottom:12}}>🧠</div>Fais ton premier check-in!</div>
+        {!chk.length?<div style={{textAlign:"center",padding:40,color:C.g400}}><div style={{display:"flex",justifyContent:"center",marginBottom:12}}><TypeIco d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"]} s={48} c={C.g300}/></div>Fais ton premier check-in!</div>
         :[...chk].reverse().map(c=><div key={c.id} style={card}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:28}}>{moods.find(m=>m.v===c.mood)?.e}</span>
+              {(()=>{const m=moods.find(x=>x.v===c.mood);return m?<MoodIco d={m.d} v={m.v} s={28}/>:null;})()}
               <div><div style={{fontWeight:600,fontSize:14,color:C.g900}}>{moods.find(m=>m.v===c.mood)?.l}</div><div style={{fontSize:11,color:C.g400}}>{fmtDate(c.date)}</div></div>
             </div>
             <button onClick={()=>del(c.id)} style={{background:"none",border:"none",cursor:"pointer"}}><Ico d={iTrash} s={14} c={C.g300}/></button>
@@ -311,7 +332,7 @@ const Stats = ({sess,chk,objs}) => {
         <div style={lbl}>Répartition par type</div>
         {!Object.keys(tc).length?<div style={{textAlign:"center",padding:16,color:C.g400,fontSize:13}}>Pas encore de données</div>
         :<div style={{marginTop:8}}>{Object.entries(tc).sort((a,b)=>b[1]-a[1]).map(([type,count])=>{const t=tTypes.find(x=>x.id===type);const pct=Math.round((count/tot)*100);return <div key={type} style={{marginBottom:8}}>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:3}}><span>{t?.e} {t?.l||type}</span><span style={{fontWeight:700,color:C.navy}}>{count} ({pct}%)</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:3}}><span style={{display:"flex",alignItems:"center",gap:6}}>{t&&<TypeIco d={t.d} s={13} c={C.blue}/>}{t?.l||type}</span><span style={{fontWeight:700,color:C.navy}}>{count} ({pct}%)</span></div>
           <div style={{height:6,background:C.g100,borderRadius:3}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:`linear-gradient(90deg,${C.blue},${C.navy})`,transition:"width .3s"}}/></div>
         </div>;})}</div>}
       </div>
