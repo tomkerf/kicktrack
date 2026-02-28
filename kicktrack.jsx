@@ -40,7 +40,7 @@ const Header = ({title,sub}) => (
           {sub && <div style={{fontSize:13,opacity:.8,marginTop:2}}>{sub}</div>}
         </div>
       </div>
-      <img src="/titouan.jpeg" alt="Titouan" style={{width:72,height:72,borderRadius:"50%",objectFit:"cover",border:"3px solid rgba(255,255,255,0.4)"}} />
+      <img src="/titouan.jpeg" alt="Titouan" style={{width:52,height:52,borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(255,255,255,0.4)"}} />
     </div>
   </div>
 );
