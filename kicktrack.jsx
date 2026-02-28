@@ -17,9 +17,9 @@ const moods = [{e:"😤",l:"Frustré",v:1},{e:"😕",l:"Moyen",v:2},{e:"😐",l:
 const tTypes = [{id:"match",l:"Match",e:"⚽"},{id:"collectif",l:"Collectif",e:"👥"},{id:"individuel",l:"Individuel",e:"🏃"},{id:"physique",l:"Physique",e:"💪"},{id:"technique",l:"Technique",e:"🎯"},{id:"mental_t",l:"Mental",e:"🧠"}];
 const objCats = [{id:"technique",l:"Technique",e:"🎯"},{id:"physique",l:"Physique",e:"💪"},{id:"tactique",l:"Tactique",e:"🧩"},{id:"mental",l:"Mental",e:"🧠"}];
 
-const glass = {background:"rgba(255,255,255,0.06)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)"};
-const card = {...glass,borderRadius:20,padding:16,marginBottom:12};
-const btnP = {...glass,background:"rgba(37,99,235,0.6)",color:"#fff",borderRadius:14,padding:"12px 24px",fontSize:15,fontWeight:600,cursor:"pointer",width:"100%",boxShadow:"0 4px 24px rgba(37,99,235,0.35), inset 0 1px 0 rgba(255,255,255,0.15)"};
+const glass = {background:"rgba(255,255,255,0.06)",backdropFilter:"blur(40px) saturate(200%)",WebkitBackdropFilter:"blur(40px) saturate(200%)",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1)"};
+const card = {...glass,borderRadius:24,padding:"18px 16px",marginBottom:12};
+const btnP = {background:"linear-gradient(135deg,#3b82f6,#1d4ed8)",color:"#fff",borderRadius:16,padding:"14px 24px",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%",border:"none",boxShadow:"0 4px 24px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.2)",letterSpacing:.2};
 const inp = {width:"100%",padding:"10px 14px",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,fontSize:14,background:"rgba(255,255,255,0.05)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",color:"#f1f5f9",boxSizing:"border-box",outline:"none",fontFamily:"inherit"};
 const lbl = {fontSize:12,fontWeight:600,color:C.g500,textTransform:"uppercase",letterSpacing:.8,marginBottom:4,display:"block"};
 
@@ -30,8 +30,9 @@ const iCheck="M20 6L9 17l-5-5";
 const iBrain="M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 0 017-7zM9 22h6M10 18v4M14 18v4";
 
 const Header = ({title,sub}) => (
-  <div style={{background:`linear-gradient(135deg,${C.navy},${C.blue})`,padding:"20px 20px 24px",borderRadius:"0 0 24px 24px",color:"#fff",position:"relative",overflow:"hidden"}}>
-    <div style={{position:"absolute",bottom:-8,right:-10,opacity:.08,fontSize:120}}>⚓</div>
+  <div style={{background:"linear-gradient(155deg,#0d2554 0%,#1d4ed8 55%,#1a3a6e 100%)",padding:"24px 20px 30px",borderRadius:"0 0 30px 30px",color:"#fff",position:"relative",overflow:"hidden",boxShadow:"0 12px 48px rgba(29,78,216,0.4)"}}>
+    <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)"}}/>
+    <div style={{position:"absolute",bottom:-8,right:-10,opacity:.06,fontSize:120}}>⚓</div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
         <img src={LOGO} alt="USC" style={{width:44,height:52,objectFit:"contain"}} />
@@ -56,18 +57,18 @@ const TabBar = ({tab,set}) => {
     {id:"stats",d:"M18 20V10M12 20V4M6 20v-6",l:"Stats"},
   ];
   return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(15,23,42,0.7)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
-    {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:"none",border:"none",padding:"4px 8px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .2s"}}>
+    {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:tab===t.id?"rgba(59,130,246,0.18)":"none",border:tab===t.id?"1px solid rgba(59,130,246,0.28)":"1px solid transparent",borderRadius:14,padding:"6px 12px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all .25s",minWidth:52}}>
       <TabIco d={t.d} active={tab===t.id}/>
-      <span style={{fontSize:10,fontWeight:600,color:tab===t.id?C.blue:C.g400}}>{t.l}</span>
+      <span style={{fontSize:10,fontWeight:700,color:tab===t.id?"#60a5fa":C.g400,transition:"color .25s"}}>{t.l}</span>
     </button>)}
   </div>;
 };
 
 const StatIco = ({d,c}) => <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}</svg>;
-const Stat = ({l,v,d,c=C.blue}) => <div style={{...glass,borderRadius:14,padding:"14px 12px",flex:1,textAlign:"center",borderTop:`3px solid ${c}`}}>
-  <div style={{marginBottom:6,display:"flex",justifyContent:"center"}}><StatIco d={d} c={c}/></div>
-  <div style={{fontSize:22,fontWeight:800,color:C.g900}}>{v}</div>
-  <div style={{fontSize:10,color:C.g400,fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>{l}</div>
+const Stat = ({l,v,d,c=C.blue}) => <div style={{background:`linear-gradient(145deg,${c}22,${c}08)`,border:`1px solid ${c}30`,borderRadius:20,padding:"16px 10px",flex:1,textAlign:"center",boxShadow:`0 4px 24px ${c}20, inset 0 1px 0 rgba(255,255,255,0.08)`}}>
+  <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><StatIco d={d} c={c}/></div>
+  <div style={{fontSize:24,fontWeight:800,color:"#f1f5f9",letterSpacing:-.5}}>{v}</div>
+  <div style={{fontSize:9,color:"rgba(148,163,184,0.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginTop:3}}>{l}</div>
 </div>;
 
 const MoodPick = ({v,set}) => <div style={{display:"flex",gap:8,justifyContent:"center"}}>
@@ -134,7 +135,7 @@ const Home = ({sess,objs,chk,go}) => {
               <div style={{fontSize:14,fontWeight:600,color:C.g900}}>{t?.l||s.type}</div>
               <div style={{fontSize:12,color:C.g400}}>{fmtDate(s.date)} · {s.dur} min</div>
             </div>
-            <div style={{background:C.blueP,borderRadius:8,padding:"3px 10px",fontSize:13,fontWeight:700,color:C.blue}}>{s.int}/10</div>
+            <div style={{background:"rgba(59,130,246,0.12)",border:"1px solid rgba(59,130,246,0.25)",borderRadius:10,padding:"4px 10px",fontSize:13,fontWeight:700,color:"#60a5fa"}}>{s.int}/10</div>
           </div>;
         })}
       </div>
@@ -337,10 +338,13 @@ export default function KickTrack() {
     const [s,o,c]=await Promise.all([store.get("kt_s"),store.get("kt_o"),store.get("kt_c")]);
     if(s)setSess(s);if(o)setObjs(o);if(c)setChk(c);setOk(true);
   })();},[]);
-  if(!ok)return <div style={{height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${C.navy},${C.blue})`,flexDirection:"column",gap:16}}>
-    <img src={LOGO} alt="USC" style={{width:72,height:84,objectFit:"contain"}} />
-    <div style={{color:C.w,fontSize:24,fontWeight:800}}>KickTrack</div>
-    <div style={{color:"rgba(255,255,255,.6)",fontSize:13}}>Chargement...</div>
+  if(!ok)return <div style={{height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0f172a",flexDirection:"column",gap:20}}>
+    <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",width:100,height:100}}>
+      <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"2px solid transparent",borderTopColor:"#3b82f6",borderRightColor:"#3b82f6",animation:"spin 1.2s linear infinite"}}/>
+      <img src={LOGO} alt="USC" style={{width:64,height:76,objectFit:"contain"}} />
+    </div>
+    <div style={{color:"#f1f5f9",fontSize:26,fontWeight:800,letterSpacing:-.5}}>KickTrack</div>
+    <div style={{color:"rgba(148,163,184,0.6)",fontSize:13,letterSpacing:.5}}>Chargement des données...</div>
   </div>;
   return <div style={{maxWidth:480,margin:"0 auto",background:C.g50,minHeight:"100vh",fontFamily:"'Nunito','Segoe UI',system-ui,sans-serif",position:"relative",overflow:"hidden"}}>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -349,6 +353,7 @@ export default function KickTrack() {
       @keyframes blob1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-30px) scale(1.1)} 66%{transform:translate(-20px,20px) scale(0.95)} }
       @keyframes blob2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,30px) scale(1.05)} 66%{transform:translate(30px,-40px) scale(1.1)} }
       @keyframes blob3 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(20px,50px) scale(0.9)} 66%{transform:translate(-40px,-20px) scale(1.05)} }
+      @keyframes spin { to { transform: rotate(360deg) } }
     `}</style>
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,maxWidth:480,margin:"0 auto",overflow:"hidden",zIndex:0,pointerEvents:"none"}}>
       <div style={{position:"absolute",top:"-80px",left:"-60px",width:280,height:280,borderRadius:"50%",background:"rgba(37,99,235,0.25)",filter:"blur(60px)",animation:"blob1 8s ease-in-out infinite"}}/>
