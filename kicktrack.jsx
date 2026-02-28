@@ -92,7 +92,7 @@ const Home = ({sess,objs,chk,go}) => {
   const actObj = objs.filter(o=>!o.done).length;
   const lastM = chk.length?chk[chk.length-1]:null;
   return <>
-    <Header title="KickTrack" sub="U.S. Concarneau — Suivi perso" />
+    <Header title="KickTrack" sub="Titouan Kerfendal — U.S. Concarneau" />
     <div style={{padding:"16px 16px 100px"}}>
       <div style={{display:"flex",gap:10,marginBottom:16}}>
         <Stat l="Cette sem." v={wk} e="⚽" c={C.blue} />
