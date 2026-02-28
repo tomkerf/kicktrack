@@ -26,7 +26,17 @@ const tTypes = [
   {id:"individuel",d:["M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2","M12 11a4 4 0 100-8 4 4 0 000 8z"],l:"Individuel"},
   {id:"physique",d:"M22 12h-4l-3 9L9 3l-3 9H2",l:"Physique"},
   {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 12m-1 0a1 1 0 102 0 1 1 0 10-2 0"],l:"Technique"},
-  {id:"mental_t",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Mental"},
+  {id:"couloir",d:["M6 3v18","M18 3v18","M10 7l-4 5 4 5","M14 7l4 5-4 5"],l:"Couloir"},
+];
+const LATERAL_PRESETS = [
+  {text:"Améliorer la qualité du centre tendu", cat:"technique"},
+  {text:"Progresser en 1v1 défensif", cat:"technique"},
+  {text:"Timing des montées et des replis", cat:"tactique"},
+  {text:"Répétitions sprint-récupération (70m)", cat:"physique"},
+  {text:"Prise de décision attaque/défense", cat:"mental"},
+  {text:"Sortie de balle sous pression", cat:"technique"},
+  {text:"Combinaisons couloir avec l'ailier", cat:"tactique"},
+  {text:"Travailler le pied gauche (centre/passe)", cat:"technique"},
 ];
 const objCats = [
   {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"],l:"Technique"},
@@ -174,8 +184,8 @@ const Home = ({sess,objs,chk,go}) => {
 
 const Train = ({sess,setSess}) => {
   const [add,setAdd]=useState(false);
-  const [f,sF]=useState({type:"collectif",dur:90,int:7,notes:"",date:today()});
-  const save=async()=>{const s={...f,id:uid()};const n=[...sess,s];setSess(n);await store.set("kt_s",n);setAdd(false);sF({type:"collectif",dur:90,int:7,notes:"",date:today()});};
+  const [f,sF]=useState({type:"collectif",dur:90,int:7,notes:"",date:today(),cote:"",centres_t:"",centres_r:""});
+  const save=async()=>{const s={...f,id:uid()};const n=[...sess,s];setSess(n);await store.set("kt_s",n);setAdd(false);sF({type:"collectif",dur:90,int:7,notes:"",date:today(),cote:"",centres_t:"",centres_r:""});};
   const del=async id=>{const n=sess.filter(s=>s.id!==id);setSess(n);await store.set("kt_s",n);};
   return <>
     <Header title="Entraînements" sub="Log tes séances" />
@@ -190,6 +200,7 @@ const Train = ({sess,setSess}) => {
           <div style={{flex:1}}>
             <div style={{fontWeight:700,fontSize:15,color:C.g900}}>{t?.l}</div>
             <div style={{fontSize:12,color:C.g400}}>{fmtDate(s.date)} · {s.dur} min · Intensité {s.int}/10</div>
+            {s.type==="match"&&s.cote&&<div style={{fontSize:11,color:C.blueL,marginTop:2,fontWeight:600}}>Côté {s.cote}{s.centres_t?` · ${s.centres_r||0}/${s.centres_t} centres`:""}</div>}
             {s.notes&&<div style={{fontSize:12,color:C.g500,marginTop:2,fontStyle:"italic"}}>{s.notes}</div>}
           </div>
           <button onClick={()=>del(s.id)} style={{background:"none",border:"none",cursor:"pointer",padding:4}}><Ico d={iTrash} s={16} c={C.g300}/></button>
@@ -205,6 +216,16 @@ const Train = ({sess,setSess}) => {
             </button>)}
           </div>
         </div>
+        {f.type==="match"&&<div style={{marginBottom:12}}>
+          <span style={lbl}>Côté joué</span>
+          <div style={{display:"flex",gap:8,marginTop:4}}>
+            {["Gauche","Droite"].map(c=><button key={c} onClick={()=>sF(x=>({...x,cote:c}))} style={{flex:1,padding:"10px 0",borderRadius:12,border:f.cote===c?`2px solid ${C.blue}`:`2px solid ${C.g200}`,background:f.cote===c?C.blueP:C.g50,color:f.cote===c?C.blue:C.g400,fontWeight:700,fontSize:13,cursor:"pointer"}}>{c}</button>)}
+          </div>
+        </div>}
+        {f.type==="match"&&<div style={{display:"flex",gap:8,marginBottom:12}}>
+          <div style={{flex:1}}><span style={lbl}>Centres tentés</span><input type="number" min="0" value={f.centres_t} onChange={e=>sF(x=>({...x,centres_t:e.target.value}))} style={inp} placeholder="0"/></div>
+          <div style={{flex:1}}><span style={lbl}>Centres réussis</span><input type="number" min="0" value={f.centres_r} onChange={e=>sF(x=>({...x,centres_r:e.target.value}))} style={inp} placeholder="0"/></div>
+        </div>}
         <div style={{marginBottom:12}}><span style={lbl}>Date</span><input type="date" value={f.date} onChange={e=>sF(x=>({...x,date:e.target.value}))} style={inp}/></div>
         <div style={{marginBottom:12}}><span style={lbl}>Durée (min)</span><input type="number" value={f.dur} onChange={e=>sF(x=>({...x,dur:+e.target.value}))} style={inp}/></div>
         <Slider label="Intensité" v={f.int} set={v=>sF(x=>({...x,int:v}))} />
@@ -258,7 +279,13 @@ const Obj = ({objs,setObjs}) => {
             </button>)}
           </div>
         </div>
-        <div style={{marginBottom:12}}><span style={lbl}>Objectif</span><input value={f.text} onChange={e=>sF(x=>({...x,text:e.target.value}))} placeholder="Ex: Améliorer mon pied gauche" style={inp}/></div>
+        <div style={{marginBottom:12}}>
+          <span style={lbl}>Suggestions latéral</span>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:4,marginBottom:10}}>
+            {LATERAL_PRESETS.map((p,i)=><button key={i} onClick={()=>sF(x=>({...x,text:p.text,cat:p.cat}))} style={{background:f.text===p.text?`${C.blue}22`:"rgba(255,255,255,0.04)",border:f.text===p.text?`1px solid ${C.blue}60`:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:"5px 12px",fontSize:11,color:f.text===p.text?C.blueL:C.g400,cursor:"pointer",fontWeight:f.text===p.text?700:400}}>{p.text}</button>)}
+          </div>
+        </div>
+        <div style={{marginBottom:12}}><span style={lbl}>Objectif</span><input value={f.text} onChange={e=>sF(x=>({...x,text:e.target.value}))} placeholder="Ou écris le tien…" style={inp}/></div>
         <div style={{marginBottom:16}}><span style={lbl}>Deadline (optionnel)</span><input type="date" value={f.dl} onChange={e=>sF(x=>({...x,dl:e.target.value}))} style={inp}/></div>
         <div style={{display:"flex",gap:10}}>
           <button onClick={()=>setAdd(false)} style={{...btnP,background:C.g200,color:C.g700,flex:1}}>Annuler</button>
