@@ -279,13 +279,13 @@ const Home = ({sess,objs,chk,go,resp}) => {
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
       </div>
       <XPCard sess={sess} chk={chk} objs={objs} resp={resp}/>
-      <ScoreSemaine sess={sess}/>
       <div style={{...card,background:"linear-gradient(145deg,rgba(220,38,38,0.12),rgba(15,23,42,0.3))",border:"1px solid rgba(220,38,38,0.2)"}}>
         <div style={lbl}>Tes super-pouvoirs</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}}>
           {["Intelligence de jeu","Maîtrise technique","Vitesse"].map(s=><span key={s} style={{background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fca5a5"}}>{s}</span>)}
         </div>
       </div>
+      <ScoreSemaine sess={sess}/>
       <ProgDuJour />
       <div style={{display:"flex",gap:10}}>
         <button onClick={()=>go("train")} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
