@@ -431,7 +431,7 @@ const Respiration = () => {
   const timeLeft=DURATION-elapsed;
   const phaseSec=5-(elapsed%5)||5;
 
-  // --- Web Audio : souffle filtré + drone méditatif ---
+  // --- Web Audio : souffle filtré pur (sans drone grave) ---
   const initAudio=()=>{
     if(audioRef.current)return audioRef.current;
     try{
@@ -446,22 +446,20 @@ const Respiration = () => {
       for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<bufLen;i++)d[i]=Math.random()*2-1;}
       const noise=ctx.createBufferSource();
       noise.buffer=buf;noise.loop=true;
-      // Filtre passe-bande : fréquence balayée 280→1000 Hz selon la bulle
+      // Filtre passe-bande : fréquence balayée 280→1000 Hz avec la bulle
       const band=ctx.createBiquadFilter();
       band.type="bandpass";band.frequency.setValueAtTime(280,ctx.currentTime);band.Q.setValueAtTime(1.4,ctx.currentTime);
+      // Filtre passe-haut pour couper les fréquences graves (<200 Hz)
+      const hp=ctx.createBiquadFilter();
+      hp.type="highpass";hp.frequency.setValueAtTime(200,ctx.currentTime);hp.Q.setValueAtTime(0.7,ctx.currentTime);
+      // Filtre passe-bas pour adoucir le haut du spectre
       const lp=ctx.createBiquadFilter();
       lp.type="lowpass";lp.frequency.setValueAtTime(2200,ctx.currentTime);
       const noiseGain=ctx.createGain();noiseGain.gain.setValueAtTime(0.22,ctx.currentTime);
-      noise.connect(band);band.connect(lp);lp.connect(noiseGain);noiseGain.connect(master);
+      noise.connect(hp);hp.connect(band);band.connect(lp);lp.connect(noiseGain);noiseGain.connect(master);
       noise.start();
 
-      // Drone méditatif (type bol tibétain) — harmoniques en A
-      const mkT=(f,g)=>{const o=ctx.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ctx.currentTime);const gn=ctx.createGain();gn.gain.setValueAtTime(g,ctx.currentTime);o.connect(gn);gn.connect(master);o.start();return{o,gn};};
-      const t1=mkT(110,0.20);   // A2 ancrage grave
-      const t2=mkT(220,0.09);   // A3 octave
-      const t3=mkT(330,0.04);   // E4 quinte
-
-      audioRef.current={ctx,master,band,noiseGain,t1,t2,t3};
+      audioRef.current={ctx,master,band,noiseGain};
       return audioRef.current;
     }catch(e){return null;}
   };
