@@ -449,16 +449,19 @@ const Obj = ({objs,setObjs}) => {
 const Respiration = () => {
   const [running,setRunning]=useState(false);
   const [elapsed,setElapsed]=useState(0);
+  const [breathExpanded,setBreathExpanded]=useState(false);
   const [sessToday,setSessToday]=useState(0);
   const DURATION=300;
   const timeLeft=DURATION-elapsed;
-  const phase=Math.floor(elapsed/5)%2===0?"inspire":"expire";
-  const phaseSec=5-(elapsed%5);
+  // phase derived from breathExpanded (not from elapsed) pour que l'animation soit visible dès le départ
+  const phase=breathExpanded?"inspire":"expire";
+  const phaseSec=5-(elapsed%5)||5;
 
   useEffect(()=>{
     store.get("kt_resp_"+today()).then(v=>{if(v)setSessToday(v);});
   },[]);
 
+  // Timer 1 seconde
   useEffect(()=>{
     if(!running)return;
     const iv=setInterval(()=>{
@@ -476,6 +479,14 @@ const Respiration = () => {
         return e+1;
       });
     },1000);
+    return()=>clearInterval(iv);
+  },[running]);
+
+  // Cycle respiration — toggle toutes les 5s, indépendant du timer
+  useEffect(()=>{
+    if(!running){setBreathExpanded(false);return;}
+    setBreathExpanded(true); // inspire immédiatement au démarrage
+    const iv=setInterval(()=>setBreathExpanded(x=>!x),5000);
     return()=>clearInterval(iv);
   },[running]);
 
@@ -500,22 +511,22 @@ const Respiration = () => {
       <div style={{position:"relative",width:160,height:160,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px solid rgba(59,130,246,0.15)"}}/>
         <div style={{
-          width:phase==="inspire"?140:80,
-          height:phase==="inspire"?140:80,
+          width:breathExpanded?140:80,
+          height:breathExpanded?140:80,
           borderRadius:"50%",
-          background:phase==="inspire"
+          background:breathExpanded
             ?"radial-gradient(circle,rgba(59,130,246,0.35),rgba(29,78,216,0.1))"
             :"radial-gradient(circle,rgba(148,163,184,0.2),rgba(15,23,42,0.1))",
-          border:phase==="inspire"?"2px solid rgba(59,130,246,0.6)":"2px solid rgba(148,163,184,0.3)",
-          boxShadow:phase==="inspire"?"0 0 40px rgba(59,130,246,0.4)":"0 0 20px rgba(148,163,184,0.1)",
-          transition:"width 5s ease-in-out,height 5s ease-in-out,background 5s ease-in-out,border 5s ease-in-out,box-shadow 5s ease-in-out",
+          border:breathExpanded?"2px solid rgba(59,130,246,0.6)":"2px solid rgba(148,163,184,0.3)",
+          boxShadow:breathExpanded?"0 0 40px rgba(59,130,246,0.4)":"none",
+          transition:"width 5s ease-in-out,height 5s ease-in-out,box-shadow 2s ease-in-out,border-color 2s ease-in-out",
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,
         }}>
           {running&&<>
-            <div style={{fontSize:13,fontWeight:800,color:phase==="inspire"?"#93c5fd":C.g400,letterSpacing:.5}}>{phase==="inspire"?"INSPIRE":"EXPIRE"}</div>
-            <div style={{fontSize:22,fontWeight:800,color:phase==="inspire"?C.blueL:C.g300}}>{phaseSec}</div>
+            <div style={{fontSize:13,fontWeight:800,color:breathExpanded?"#93c5fd":C.g400,letterSpacing:.5}}>{breathExpanded?"INSPIRE":"EXPIRE"}</div>
+            <div style={{fontSize:22,fontWeight:800,color:breathExpanded?C.blueL:C.g300}}>{phaseSec}</div>
           </>}
-          {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",padding:"0 12px"}}>Prêt à<br/>commencer</div>}
+          {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",padding:"0 12px",lineHeight:1.5}}>Prêt à<br/>commencer</div>}
           {!running&&started&&<div style={{fontSize:11,color:C.g400}}>En pause</div>}
         </div>
       </div>
@@ -528,7 +539,7 @@ const Respiration = () => {
         <div style={{height:"100%",width:`${pct*100}%`,background:"linear-gradient(90deg,#3b82f6,#1d4ed8)",borderRadius:2,transition:"width .5s linear"}}/>
       </div>
 
-      <button onClick={()=>{if(!running&&elapsed===0)setElapsed(0);setRunning(r=>!r);}} style={{...btnP,width:"auto",padding:"12px 40px",fontSize:14}}>
+      <button onClick={()=>setRunning(r=>!r)} style={{...btnP,width:"auto",padding:"12px 40px",fontSize:14}}>
         {running?"Pause":elapsed===0?"Démarrer":"Reprendre"}
       </button>
 
