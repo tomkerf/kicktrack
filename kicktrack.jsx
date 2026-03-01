@@ -565,6 +565,54 @@ const Mental = ({chk,setChk}) => {
   </>;
 };
 
+const CompetencesRadar = () => {
+  const SKL=[{n:"Vitesse"},{n:"Tir"},{n:"Passe"},{n:"Défense"},{n:"Physique"}];
+  const [vals,setVals]=useState([5,5,5,5,5]);
+  useEffect(()=>{store.get("kt_comp").then(v=>{if(v)setVals(v);});},[]);
+  const save=async nv=>{setVals(nv);await store.set("kt_comp",nv);};
+  const cx=110,cy=110,R=78;
+  const ang=SKL.map((_,i)=>(Math.PI*2*i/5)-Math.PI/2);
+  const pt=(r,i)=>[cx+r*Math.cos(ang[i]),cy+r*Math.sin(ang[i])];
+  const mkPath=pts=>pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")+"Z";
+  const grid=[2,4,6,8,10].map(l=>SKL.map((_,i)=>pt(R*l/10,i)));
+  const data=SKL.map((_,i)=>pt(R*vals[i]/10,i));
+  const lblR=R+22;
+  return <div style={card}>
+    <div style={lbl}>Toile de compétences</div>
+    <svg width="220" height="220" style={{display:"block",margin:"8px auto 0",overflow:"visible"}}>
+      {/* Grille */}
+      {grid.map((pts,li)=><path key={li} d={mkPath(pts)} fill={li===4?"rgba(37,99,235,0.04)":"none"} stroke="rgba(148,163,184,0.18)" strokeWidth="1"/>)}
+      {/* Axes */}
+      {ang.map((a,i)=><line key={i} x1={cx} y1={cy} x2={(cx+R*Math.cos(a)).toFixed(1)} y2={(cy+R*Math.sin(a)).toFixed(1)} stroke="rgba(148,163,184,0.2)" strokeWidth="1"/>)}
+      {/* Zone compétences */}
+      <path d={mkPath(data)} fill="rgba(37,99,235,0.22)" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round"/>
+      {/* Points */}
+      {data.map((p,i)=><circle key={i} cx={p[0].toFixed(1)} cy={p[1].toFixed(1)} r="5" fill="#3b82f6" stroke="#0f172a" strokeWidth="2"/>)}
+      {/* Labels */}
+      {SKL.map(({n},i)=>{
+        const lx=cx+lblR*Math.cos(ang[i]);
+        const ly=cy+lblR*Math.sin(ang[i]);
+        return <text key={i} x={lx.toFixed(1)} y={ly.toFixed(1)} textAnchor="middle" dominantBaseline="middle" fontSize="11" fontWeight="700" fill="#cbd5e1">{n}</text>;
+      })}
+      {/* Valeurs */}
+      {data.map((p,i)=>{
+        const ox=((p[0]-cx)*0.18).toFixed(1);
+        const oy=((p[1]-cy)*0.18).toFixed(1);
+        return vals[i]>=4?<text key={i} x={(p[0]+parseFloat(ox)).toFixed(1)} y={(p[1]+parseFloat(oy)-8).toFixed(1)} textAnchor="middle" fontSize="10" fontWeight="800" fill="#93c5fd">{vals[i]}</text>:null;
+      })}
+    </svg>
+    <div style={{marginTop:4}}>
+      {SKL.map(({n},i)=><div key={n} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+        <span style={{fontSize:12,fontWeight:700,color:C.g700,width:60,flexShrink:0}}>{n}</span>
+        <input type="range" min="1" max="10" value={vals[i]}
+          onChange={e=>{const nv=[...vals];nv[i]=+e.target.value;save(nv);}}
+          style={{flex:1,accentColor:"#3b82f6",cursor:"pointer"}}/>
+        <span style={{fontSize:15,fontWeight:800,color:C.blueL,width:20,textAlign:"right"}}>{vals[i]}</span>
+      </div>)}
+    </div>
+  </div>;
+};
+
 const Stats = ({sess,chk,objs,resp}) => {
   const tot=sess.length;
   const totMin=sess.reduce((a,s)=>a+(s.dur||0),0);
@@ -580,6 +628,7 @@ const Stats = ({sess,chk,objs,resp}) => {
         <Stat l="Minutes" v={totMin} d="M12 22a10 10 0 110-20 10 10 0 010 20zM12 6v6l4 2" c={C.navy} />
         <Stat l="Int. moy." v={avgI} d={["M12 8v4","M12 16h.01","M3 12a9 9 0 1018 0A9 9 0 003 12z"]} c={C.red} />
       </div>
+      <CompetencesRadar />
       <MiniChart data={wkD} label="Séances / semaine (4 dern.)" c={C.blue} />
       {moodD.length>0&&<MiniChart data={moodD} label="Évolution humeur" c={C.red} />}
       <div style={card}>
