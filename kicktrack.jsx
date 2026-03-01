@@ -623,7 +623,7 @@ export default function KickTrack() {
     <div style={{color:"#f1f5f9",fontSize:26,fontWeight:800,letterSpacing:-.5}}>KickTrack</div>
     <div style={{color:"rgba(148,163,184,0.6)",fontSize:13,letterSpacing:.5}}>Chargement des données...</div>
   </div>;
-  return <div style={{maxWidth:480,margin:"0 auto",background:C.g50,minHeight:"100vh",fontFamily:"'Nunito','Segoe UI',system-ui,sans-serif",position:"relative",overflow:"hidden"}}>
+  return <div style={{maxWidth:480,margin:"0 auto",background:C.g50,minHeight:"100vh",fontFamily:"'Nunito','Segoe UI',system-ui,sans-serif",position:"relative"}}>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>{`
       html, body { background: #0f172a; margin: 0; padding: 0; }
