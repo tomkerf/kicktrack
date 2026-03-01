@@ -60,6 +60,28 @@ const objCats = [
   {id:"mental",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Mental"},
 ];
 
+const LEVELS = [
+  {min:0,   name:"Rookie",    c:"#94a3b8"},
+  {min:60,  name:"Titulaire", c:"#22c55e"},
+  {min:160, name:"Cadre",     c:"#3b82f6"},
+  {min:320, name:"Espoir",    c:"#f59e0b"},
+  {min:550, name:"Pro",       c:"#f97316"},
+  {min:850, name:"Champion",  c:"#ef4444"},
+];
+const BADGES = [
+  {id:"b1",ico:"⚽",l:"C'est parti !",   desc:"1ère séance loggée",         check:(s)=>s.length>=1},
+  {id:"b2",ico:"🧠",l:"Mental de fer",   desc:"1er check-in mental",         check:(s,c)=>c.length>=1},
+  {id:"b3",ico:"🎯",l:"Cap accompli",    desc:"1er objectif atteint",        check:(s,c,o)=>o.filter(x=>x.done).length>=1},
+  {id:"b4",ico:"🔥",l:"En feu !",        desc:"7 jours d'affilée",           check:(s,c,o,r,st)=>st>=7},
+  {id:"b5",ico:"💨",l:"Souffle d'acier", desc:"9 sessions cohérence card.",  check:(s,c,o,r)=>r>=9},
+  {id:"b6",ico:"💪",l:"Guerrier",        desc:"20 séances au total",         check:(s)=>s.length>=20},
+  {id:"b7",ico:"🏆",l:"Compétiteur",     desc:"5 matches loggés",            check:(s)=>s.filter(x=>x.type==="match").length>=5},
+  {id:"b8",ico:"📅",l:"Semaine parfaite",desc:"4 séances en une semaine",   check:(s)=>new Set(s.filter(x=>daysSince(x.date)<7).map(x=>x.date)).size>=4},
+];
+const calcXP = (sess,chk,objs,resp) => sess.length*10 + chk.length*5 + objs.filter(o=>o.done).length*15 + resp*5;
+const getLevel = xp => [...LEVELS].reverse().find(l=>xp>=l.min)||LEVELS[0];
+const getNext  = xp => LEVELS.find(l=>l.min>xp)||null;
+
 const glass = {background:"rgba(255,255,255,0.06)",backdropFilter:"blur(40px) saturate(200%)",WebkitBackdropFilter:"blur(40px) saturate(200%)",border:"1px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1)"};
 const card = {...glass,borderRadius:24,padding:"18px 16px",marginBottom:12};
 const btnP = {background:"linear-gradient(135deg,#3b82f6,#1d4ed8)",color:"#fff",borderRadius:16,padding:"14px 24px",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%",border:"none",boxShadow:"0 4px 24px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.2)",letterSpacing:.2};
@@ -145,6 +167,71 @@ const MiniChart = ({data,label,c=C.blue}) => {
   </div>;
 };
 
+// === GAMIFICATION ===
+const XPCard = ({sess,chk,objs,resp}) => {
+  const xp=calcXP(sess,chk,objs,resp);
+  const lvl=getLevel(xp); const nxt=getNext(xp);
+  const pct=nxt?Math.round(((xp-lvl.min)/(nxt.min-lvl.min))*100):100;
+  return <div style={{...card,background:`linear-gradient(145deg,${lvl.c}22,rgba(15,23,42,0.5))`,border:`1px solid ${lvl.c}40`}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <div>
+        <div style={{fontSize:10,color:lvl.c,fontWeight:800,textTransform:"uppercase",letterSpacing:1.2,marginBottom:2}}>Niveau</div>
+        <div style={{fontSize:24,fontWeight:900,color:"#f1f5f9",letterSpacing:-.5}}>{lvl.name}</div>
+      </div>
+      <div style={{textAlign:"right",background:`${lvl.c}18`,border:`1px solid ${lvl.c}40`,borderRadius:16,padding:"8px 14px"}}>
+        <div style={{fontSize:26,fontWeight:900,color:lvl.c,lineHeight:1}}>{xp}</div>
+        <div style={{fontSize:9,color:C.g400,fontWeight:700,letterSpacing:.8}}>XP</div>
+      </div>
+    </div>
+    <div style={{height:8,background:"rgba(255,255,255,0.07)",borderRadius:4,overflow:"hidden",marginBottom:6}}>
+      <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${lvl.c},${lvl.c}99)`,borderRadius:4,transition:"width .6s"}}/>
+    </div>
+    <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.g400}}>
+      {nxt?<><span>+{nxt.min-xp} XP → {nxt.name}</span><span>{pct}%</span></>
+          :<span style={{color:lvl.c,fontWeight:700,width:"100%",textAlign:"center"}}>Niveau maximum atteint !</span>}
+    </div>
+  </div>;
+};
+
+const ScoreSemaine = ({sess}) => {
+  const TARGET=4;
+  const wk=new Set(sess.filter(s=>daysSince(s.date)<7).map(s=>s.date)).size;
+  const count=Math.min(wk,TARGET);
+  const pct=(count/TARGET)*100;
+  const ok=count>=TARGET;
+  const msgs=["Allez, démarre ta semaine !","Bien lancé, continue !","Encore un effort !","Semaine parfaite 🔥"];
+  return <div style={card}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <span style={lbl}>Programme de la semaine</span>
+      <span style={{fontSize:16,fontWeight:800,color:ok?"#22c55e":C.blueL}}>{count}/{TARGET}</span>
+    </div>
+    <div style={{height:10,background:"rgba(255,255,255,0.07)",borderRadius:5,overflow:"hidden",marginBottom:8}}>
+      <div style={{height:"100%",width:`${pct}%`,background:ok?"linear-gradient(90deg,#22c55e,#16a34a)":"linear-gradient(90deg,#3b82f6,#1d4ed8)",borderRadius:5,transition:"width .5s"}}/>
+    </div>
+    <div style={{fontSize:11,color:C.g400,textAlign:"center"}}>{msgs[Math.min(count,3)]}</div>
+  </div>;
+};
+
+const BadgesCard = ({sess,chk,objs,resp,streak}) => {
+  const unlocked=BADGES.filter(b=>b.check(sess,chk,objs,resp,streak));
+  return <div style={card}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+      <span style={lbl}>Trophées</span>
+      <span style={{fontSize:12,color:C.blueL,fontWeight:700}}>{unlocked.length}/{BADGES.length}</span>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+      {BADGES.map(b=>{
+        const u=b.check(sess,chk,objs,resp,streak);
+        return <div key={b.id} style={{background:u?"rgba(245,158,11,0.1)":"rgba(255,255,255,0.02)",border:u?"1px solid rgba(245,158,11,0.35)":"1px solid rgba(255,255,255,0.05)",borderRadius:16,padding:"12px 10px",textAlign:"center",opacity:u?1:0.38,transition:"opacity .3s"}}>
+          <div style={{fontSize:26,marginBottom:4}}>{b.ico}</div>
+          <div style={{fontSize:11,fontWeight:700,color:u?"#fbbf24":C.g400}}>{b.l}</div>
+          <div style={{fontSize:9,color:C.g400,marginTop:2,lineHeight:1.3}}>{b.desc}</div>
+        </div>;
+      })}
+    </div>
+  </div>;
+};
+
 // === PROGRAMME DU JOUR ===
 const ProgDuJour = () => {
   const j = new Date().getDay();
@@ -178,7 +265,7 @@ const ProgDuJour = () => {
 };
 
 // === PAGES ===
-const Home = ({sess,objs,chk,go}) => {
+const Home = ({sess,objs,chk,go,resp}) => {
   const wk = sess.filter(s=>daysSince(s.date)<7).length;
   const streak = (()=>{if(!sess.length)return 0;const sorted=[...sess].sort((a,b)=>b.date.localeCompare(a.date));let c=0;for(const s of sorted){if(daysSince(s.date)<=c+1)c++;else break;}return c;})();
   const actObj = objs.filter(o=>!o.done).length;
@@ -191,6 +278,8 @@ const Home = ({sess,objs,chk,go}) => {
         <Stat l="Série" v={`${streak}j`} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" c={C.red} />
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
       </div>
+      <XPCard sess={sess} chk={chk} objs={objs} resp={resp}/>
+      <ScoreSemaine sess={sess}/>
       <ProgDuJour />
       <div style={{...card,background:"linear-gradient(145deg,rgba(220,38,38,0.12),rgba(15,23,42,0.3))",border:"1px solid rgba(220,38,38,0.2)"}}>
         <div style={lbl}>Tes super-pouvoirs</div>
@@ -381,6 +470,7 @@ const Respiration = () => {
             store.set("kt_resp_"+today(),n);
             return n;
           });
+          store.get("kt_resp_total").then(t=>store.set("kt_resp_total",(t||0)+1));
           return 0;
         }
         return e+1;
@@ -490,7 +580,7 @@ const Mental = ({chk,setChk}) => {
   </>;
 };
 
-const Stats = ({sess,chk,objs}) => {
+const Stats = ({sess,chk,objs,resp}) => {
   const tot=sess.length;
   const totMin=sess.reduce((a,s)=>a+(s.dur||0),0);
   const avgI=tot?(sess.reduce((a,s)=>a+s.int,0)/tot).toFixed(1):"-";
@@ -523,6 +613,7 @@ const Stats = ({sess,chk,objs}) => {
           <div style={{flex:1,textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:C.navy}}>{objs.filter(o=>o.done).length}</div><div style={{fontSize:11,color:C.g400}}>Accomplis</div></div>
         </div>
       </div>
+      <BadgesCard sess={sess} chk={chk} objs={objs} resp={resp} streak={(()=>{if(!sess.length)return 0;const sorted=[...sess].sort((a,b)=>b.date.localeCompare(a.date));let c=0;for(const s of sorted){if(daysSince(s.date)<=c+1)c++;else break;}return c;})()}/>
     </div>
   </>;
 };
@@ -534,9 +625,10 @@ export default function KickTrack() {
   const [objs,setObjs]=useState([]);
   const [chk,setChk]=useState([]);
   const [ok,setOk]=useState(false);
+  const [resp,setResp]=useState(0);
   useEffect(()=>{(async()=>{
-    const [s,o,c]=await Promise.all([store.get("kt_s"),store.get("kt_o"),store.get("kt_c")]);
-    if(s)setSess(s);if(o)setObjs(o);if(c)setChk(c);setOk(true);
+    const [s,o,c,r]=await Promise.all([store.get("kt_s"),store.get("kt_o"),store.get("kt_c"),store.get("kt_resp_total")]);
+    if(s)setSess(s);if(o)setObjs(o);if(c)setChk(c);if(r)setResp(r);setOk(true);
   })();},[]);
   if(!ok)return <div style={{height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0f172a",flexDirection:"column",gap:20}}>
     <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",width:100,height:100}}>
@@ -561,11 +653,11 @@ export default function KickTrack() {
       <div style={{position:"absolute",bottom:"20%",left:"-40px",width:200,height:200,borderRadius:"50%",background:"rgba(6,182,212,0.15)",filter:"blur(50px)",animation:"blob3 12s ease-in-out infinite"}}/>
     </div>
     <div style={{position:"relative",zIndex:1}}>
-      {tab==="home"&&<Home sess={sess} objs={objs} chk={chk} go={setTab}/>}
+      {tab==="home"&&<Home sess={sess} objs={objs} chk={chk} go={setTab} resp={resp}/>}
       {tab==="train"&&<Train sess={sess} setSess={setSess}/>}
       {tab==="obj"&&<Obj objs={objs} setObjs={setObjs}/>}
       {tab==="mental"&&<Mental chk={chk} setChk={setChk}/>}
-      {tab==="stats"&&<Stats sess={sess} chk={chk} objs={objs}/>}
+      {tab==="stats"&&<Stats sess={sess} chk={chk} objs={objs} resp={resp}/>}
     </div>
     <TabBar tab={tab} set={setTab}/>
   </div>;
