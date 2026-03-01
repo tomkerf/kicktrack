@@ -1129,7 +1129,6 @@ const Stats = ({sess,chk,objs,resp}) => {
 const FD_KEY = "d0e59dca14bf46448e54da7177b5d98c";
 const FD_BASE = "https://api.football-data.org/v4";
 
-const fmtDate = d => new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
 const fmtMatchDate = iso => new Date(iso).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
 const fmtTime = iso => new Date(iso).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
 
