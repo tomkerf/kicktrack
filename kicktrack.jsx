@@ -172,7 +172,7 @@ const TabBar = ({tab,set}) => {
     {id:"stats",d:"M18 20V10M12 20V4M6 20v-6",l:"Stats"},
   ];
   return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(15,23,42,0.7)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
-    {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:tab===t.id?"rgba(59,130,246,0.18)":"none",border:tab===t.id?"1px solid rgba(59,130,246,0.28)":"1px solid transparent",borderRadius:14,padding:"6px 12px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all .25s",minWidth:52}}>
+    {ts.map(t=><button key={t.id} onClick={()=>set(t.id)} style={{background:tab===t.id?"rgba(59,130,246,0.18)":"none",border:tab===t.id?"1px solid rgba(59,130,246,0.28)":"1px solid transparent",borderRadius:14,padding:"6px 5px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all .25s",minWidth:44,flex:1}}>
       <TabIco d={t.d} active={tab===t.id}/>
       <span style={{fontSize:10,fontWeight:700,color:tab===t.id?"#60a5fa":C.g400,transition:"color .25s"}}>{t.l}</span>
     </button>)}
