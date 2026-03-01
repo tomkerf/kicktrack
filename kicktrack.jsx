@@ -45,12 +45,19 @@ const LATERAL_PRESETS = [
   {text:"Timing des montées et des replis", cat:"tactique"},
 ];
 const PROGRAMME = [
+  // 0 Dimanche
   {repos:true, routines:["Cohérence cardiaque 5'","Étirements"]},
-  {collectif:"18h30 – 20h00", individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
-  {individuel:"Échelle de rythme — 5' · 10\" appuis rapides / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
-  {collectif:"14h00", individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
-  {collectif:"18h00", individuel:"Échelle de rythme — 5' · 10\" appuis rapides / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
-  {individuel:"Vitesse-Force : ×5 sprints 5m + 1 sprint 30m · 1' récup entre chaque", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  // 1 Lundi
+  {collectif:"18h30 – 20h00", individuel:"Corde à sauter 5' + Novary 5'", lien:{label:"Ouvrir Novary",url:"https://novary-pro.vercel.app/member"}, routines:["Cohérence cardiaque 5' × 3/jour"]},
+  // 2 Mardi
+  {individuel:"Échelle de rythme 5'\nRenfo : 3×12 squats · 3×10 fentes · 3×40s gainage · 4×10 jump squats", routines:["Cohérence cardiaque 5' × 3/jour"]},
+  // 3 Mercredi
+  {collectif:"14h00", individuel:"Corde à sauter 5' + Novary 5'", lien:{label:"Ouvrir Novary",url:"https://novary-pro.vercel.app/member"}, routines:["Cohérence cardiaque 5' × 3/jour"]},
+  // 4 Jeudi
+  {collectif:"18h00", individuel:"Échelle de rythme 5'", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  // 5 Vendredi
+  {individuel:"Corde à sauter 5' + Sprints 5'", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  // 6 Samedi
   {collectif:"Match !", routines:["Cohérence cardiaque 5' × 3/jour","Nadi Shodhana si besoin"]},
 ];
 const objCats = [
@@ -253,7 +260,14 @@ const ProgDuJour = () => {
         </div>}
         {p.individuel&&<div style={{display:"flex",alignItems:"flex-start",gap:10,paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${C.g100}`}}>
           <TypeIco d={iIndiv} s={18} c={C.red}/>
-          <div><div style={{fontSize:12,fontWeight:700,color:C.g900}}>Travail individuel</div><div style={{fontSize:11,color:C.g400,lineHeight:1.5}}>{p.individuel}</div></div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,fontWeight:700,color:C.g900}}>Travail individuel</div>
+            <div style={{fontSize:11,color:C.g400,lineHeight:1.6,whiteSpace:"pre-line"}}>{p.individuel}</div>
+            {p.lien&&<a href={p.lien.url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,marginTop:6,background:"rgba(59,130,246,0.12)",border:"1px solid rgba(59,130,246,0.28)",borderRadius:8,padding:"3px 9px",fontSize:11,fontWeight:700,color:"#93c5fd",textDecoration:"none"}}>
+              <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+              {p.lien.label}
+            </a>}
+          </div>
         </div>}
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}><span style={{...lbl,margin:0}}>Routines</span></div>
         {p.routines.map((r,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,marginTop:5}}>
