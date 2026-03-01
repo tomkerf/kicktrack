@@ -540,8 +540,8 @@ const Respiration = () => {
   const secs=timeLeft%60;
   const pct=elapsed/DURATION;
   const started=elapsed>0||running;
-  // cubic-bezier qui imite une vraie respiration : lent aux extrêmes, fluide au centre
-  const breathTr="all 5s cubic-bezier(0.37,0,0.63,1)";
+  // transition GPU-only via transform:scale — aucun layout reflow, zéro saccade
+  const scTr="transform 5s cubic-bezier(0.37,0,0.63,1)";
 
   return <div style={{...card,background:"linear-gradient(145deg,rgba(59,130,246,0.12),rgba(15,23,42,0.4))",border:"1px solid rgba(59,130,246,0.25)"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
@@ -563,47 +563,67 @@ const Respiration = () => {
       </div>
     </div>
 
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
-      {/* Bulle de respiration */}
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
+      {/* Bulle — taille DOM fixe 150px, scale GPU pour le mouvement */}
       <div style={{position:"relative",width:170,height:170,display:"flex",alignItems:"center",justifyContent:"center"}}>
         {/* Anneau fixe de référence */}
-        <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px solid rgba(59,130,246,0.12)"}}/>
-        {/* Halo externe qui pulse avec la bulle */}
+        <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px solid rgba(59,130,246,0.10)"}}/>
+        {/* Halo externe — scale + couleur selon phase */}
         <div style={{
-          position:"absolute",
-          width:breathExpanded?168:68,
-          height:breathExpanded?168:68,
-          borderRadius:"50%",
+          position:"absolute",width:162,height:162,borderRadius:"50%",
           background:"transparent",
-          boxShadow:breathExpanded?"0 0 55px 18px rgba(59,130,246,0.13)":"0 0 10px 2px rgba(100,116,139,0.04)",
-          transition:breathTr,
+          transform:breathExpanded?"scale(1)":"scale(0.46)",
+          boxShadow:breathExpanded
+            ?"0 0 55px 22px rgba(59,130,246,0.15)"
+            :"0 0 40px 16px rgba(251,146,60,0.13)",
+          transition:`${scTr}, box-shadow 3.5s ease-in-out`,
           pointerEvents:"none",
         }}/>
-        {/* Bulle principale */}
+        {/* Bulle principale — taille fixe 150px, SCALE ONLY (GPU compositor) */}
         <div style={{
-          width:breathExpanded?148:74,
-          height:breathExpanded?148:74,
-          borderRadius:"50%",
-          background:breathExpanded
-            ?"radial-gradient(circle at 38% 32%,rgba(186,230,253,0.45),rgba(59,130,246,0.28),rgba(29,78,216,0.08))"
-            :"radial-gradient(circle at 38% 32%,rgba(148,163,184,0.28),rgba(71,85,105,0.12),rgba(15,23,42,0.04))",
-          border:breathExpanded?"1.5px solid rgba(147,197,253,0.55)":"1.5px solid rgba(100,116,139,0.28)",
-          boxShadow:breathExpanded
-            ?"inset 0 -8px 24px rgba(29,78,216,0.18), inset 0 8px 16px rgba(186,230,253,0.12), 0 0 28px rgba(59,130,246,0.28)"
-            :"inset 0 -4px 12px rgba(0,0,0,0.18), inset 0 4px 8px rgba(255,255,255,0.03)",
-          transition:breathTr,
-          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,
+          width:150,height:150,borderRadius:"50%",
+          transform:breathExpanded?"scale(1)":"scale(0.50)",
+          transition:scTr,
+          position:"relative",flexShrink:0,
         }}>
-          {running&&<>
-            <div style={{fontSize:11,fontWeight:800,color:breathExpanded?"#bfdbfe":"#64748b",letterSpacing:.8,transition:"color 1.2s ease"}}>{breathExpanded?"INSPIRE":"EXPIRE"}</div>
-            <div style={{fontSize:24,fontWeight:800,color:breathExpanded?"#93c5fd":"#94a3b8",transition:"color 1.2s ease"}}>{phaseSec}</div>
-          </>}
-          {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",padding:"0 14px",lineHeight:1.6}}>Prêt à<br/>commencer</div>}
-          {!running&&started&&<div style={{fontSize:11,color:C.g400}}>En pause</div>}
+          {/* Couche inspire — bleu ciel */}
+          <div style={{
+            position:"absolute",inset:0,borderRadius:"50%",
+            background:"radial-gradient(circle at 38% 32%,rgba(186,230,253,0.60),rgba(59,130,246,0.30),rgba(29,78,216,0.08))",
+            border:"1.5px solid rgba(147,197,253,0.60)",
+            boxShadow:"inset 0 -8px 24px rgba(29,78,216,0.18),inset 0 10px 18px rgba(186,230,253,0.18),0 0 30px rgba(59,130,246,0.28)",
+            opacity:breathExpanded?1:0,
+            transition:"opacity 4s ease-in-out",
+          }}/>
+          {/* Couche expire — ambre chaud */}
+          <div style={{
+            position:"absolute",inset:0,borderRadius:"50%",
+            background:"radial-gradient(circle at 38% 32%,rgba(254,215,170,0.60),rgba(251,146,60,0.26),rgba(194,65,12,0.07))",
+            border:"1.5px solid rgba(253,186,116,0.52)",
+            boxShadow:"inset 0 -8px 24px rgba(194,65,12,0.14),inset 0 10px 18px rgba(254,215,170,0.20),0 0 24px rgba(251,146,60,0.24)",
+            opacity:breathExpanded?0:1,
+            transition:"opacity 4s ease-in-out",
+          }}/>
         </div>
       </div>
 
-      <div style={{fontSize:36,fontWeight:800,color:C.g900,letterSpacing:-1,fontVariantNumeric:"tabular-nums"}}>
+      {/* Label INSPIRE/EXPIRE + décompte — HORS bulle, toujours lisibles */}
+      <div style={{height:56,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
+        {running&&<>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:1.2,
+            color:breathExpanded?"#93c5fd":"#fdba74",
+            transition:"color 2.5s ease-in-out",
+          }}>{breathExpanded?"INSPIRE":"EXPIRE"}</div>
+          <div style={{fontSize:38,fontWeight:800,lineHeight:1,
+            color:breathExpanded?"#60a5fa":"#fb923c",
+            transition:"color 2.5s ease-in-out",
+          }}>{phaseSec}</div>
+        </>}
+        {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",lineHeight:1.6}}>Prêt à commencer</div>}
+        {!running&&started&&<div style={{fontSize:11,color:C.g400}}>En pause</div>}
+      </div>
+
+      <div style={{fontSize:30,fontWeight:800,color:C.g900,letterSpacing:-1,fontVariantNumeric:"tabular-nums"}}>
         {mins}:{String(secs).padStart(2,"0")}
       </div>
 
