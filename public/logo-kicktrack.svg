@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Dégradé fond bouclier -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d2554"/>
+      <stop offset="50%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1a3a6e"/>
+    </linearGradient>
+    <!-- Dégradé ballon -->
+    <radialGradient id="ballGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </radialGradient>
+    <!-- Dégradé ligne tracking -->
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <!-- Ombre portée -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0d2554" flood-opacity="0.5"/>
+    </filter>
+    <!-- Lueur bleue -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Bouclier principal -->
+  <path d="M100 12 L172 40 L172 108 Q172 158 100 188 Q28 158 28 108 L28 40 Z"
+        fill="url(#shieldGrad)" filter="url(#shadow)"/>
+
+  <!-- Bordure bouclier blanc -->
+  <path d="M100 18 L166 44 L166 108 Q166 154 100 182 Q34 154 34 108 L34 44 Z"
+        fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+
+  <!-- Ligne décorative médiane du bouclier -->
+  <line x1="100" y1="18" x2="100" y2="182" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <line x1="34" y1="90" x2="166" y2="90" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+  <!-- Ballon de foot -->
+  <circle cx="100" cy="88" r="32" fill="url(#ballGrad)" filter="url(#shadow)"/>
+
+  <!-- Pentagones du ballon -->
+  <polygon points="100,62 109,68 106,79 94,79 91,68" fill="#1e293b" opacity="0.7"/>
+  <polygon points="126,77 122,88 111,91 104,83 108,72" fill="#1e293b" opacity="0.7"/>
+  <polygon points="118,103 107,106 100,98 104,87 116,87" fill="#1e293b" opacity="0.7"/>
+  <polygon points="82,103 74,95 78,84 90,84 94,95" fill="#1e293b" opacity="0.7"/>
+  <polygon points="74,77 86,73 93,81 89,92 78,92" fill="#1e293b" opacity="0.7"/>
+
+  <!-- Contour du ballon -->
+  <circle cx="100" cy="88" r="32" fill="none" stroke="rgba(30,41,59,0.3)" stroke-width="1"/>
+
+  <!-- Ligne de tracking (courbe pulse) -->
+  <polyline points="38,148 55,148 63,132 72,160 80,138 88,148 100,148 108,128 117,155 124,142 132,148 162,148"
+            fill="none" stroke="url(#lineGrad)" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Point lumineux à la fin de la ligne -->
+  <circle cx="162" cy="148" r="4" fill="#ffffff" opacity="0.9"/>
+  <circle cx="162" cy="148" r="7" fill="#60a5fa" opacity="0.3"/>
+
+  <!-- Texte KT en bas du bouclier -->
+  <text x="100" y="175" text-anchor="middle" font-family="'Nunito',system-ui,sans-serif"
+        font-size="13" font-weight="800" fill="rgba(255,255,255,0.6)" letter-spacing="3">
+    KICKTRACK
+  </text>
+</svg>
