@@ -119,6 +119,30 @@ const iTrash="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H
 const iCheck="M20 6L9 17l-5-5";
 const iBrain="M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 0 017-7zM9 22h6M10 18v4M14 18v4";
 
+const BALLS = [
+  {s:22,top:"6%",   left:"72%", dur:8,  delay:0,   anim:"ball1"},
+  {s:15,top:"18%",  left:"8%",  dur:11, delay:1.8, anim:"ball2"},
+  {s:28,top:"34%",  left:"82%", dur:9,  delay:0.4, anim:"ball3"},
+  {s:13,top:"50%",  left:"15%", dur:13, delay:2.2, anim:"ball1"},
+  {s:20,top:"63%",  left:"58%", dur:10, delay:3.1, anim:"ball2"},
+  {s:17,top:"78%",  left:"4%",  dur:12, delay:1.0, anim:"ball3"},
+  {s:25,top:"12%",  left:"40%", dur:9,  delay:4.0, anim:"ball1"},
+  {s:11,top:"88%",  left:"80%", dur:8,  delay:2.7, anim:"ball2"},
+  {s:19,top:"45%",  left:"92%", dur:14, delay:0.9, anim:"ball3"},
+];
+const FloatingBalls = () => (
+  <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+    {BALLS.map((b,i)=>(
+      <div key={i} style={{
+        position:"absolute", top:b.top, left:b.left,
+        fontSize:b.s, opacity:0.08, userSelect:"none",
+        animation:`${b.anim} ${b.dur}s ease-in-out infinite`,
+        animationDelay:`${b.delay}s`,
+      }}>⚽</div>
+    ))}
+  </div>
+);
+
 const Header = ({title,sub}) => (
   <div style={{background:"linear-gradient(155deg,#0d2554 0%,#1d4ed8 55%,#1a3a6e 100%)",paddingTop:"calc(24px + env(safe-area-inset-top))",paddingBottom:30,paddingLeft:20,paddingRight:20,borderRadius:"0 0 30px 30px",color:"#fff",position:"sticky",top:0,zIndex:10,overflow:"hidden",boxShadow:"0 12px 48px rgba(29,78,216,0.4)"}}>
     <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)"}}/>
@@ -569,7 +593,9 @@ const Home = ({sess,objs,chk,go,resp}) => {
   const lastM = chk.length?chk[chk.length-1]:null;
   return <>
     <Header title="KickTrack" sub="Titouan Kerfendal — U.S. Concarneau" />
-    <div style={{padding:"16px 16px 100px"}}>
+    <div style={{padding:"16px 16px 100px",position:"relative"}}>
+      <FloatingBalls />
+      <div style={{position:"relative",zIndex:1}}>
       <div style={{display:"flex",gap:10,marginBottom:16}}>
         <Stat l="Cette sem." v={wk} d="M12 22a10 10 0 110-20 10 10 0 010 20zM8 12l2.5 2.5L16 9" c={C.blue} />
         <Stat l="Série" v={`${streak}j`} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" c={C.red} />
@@ -588,6 +614,7 @@ const Home = ({sess,objs,chk,go,resp}) => {
         <button onClick={()=>go("mental")} style={{...btnP,background:`linear-gradient(135deg,${C.red},${C.navy})`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
           <Ico d={iBrain} s={18}/> Check-in
         </button>
+      </div>
       </div>
     </div>
   </>;
@@ -1097,6 +1124,9 @@ export default function KickTrack() {
       @keyframes blob2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,30px) scale(1.05)} 66%{transform:translate(30px,-40px) scale(1.1)} }
       @keyframes blob3 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(20px,50px) scale(0.9)} 66%{transform:translate(-40px,-20px) scale(1.05)} }
       @keyframes spin { to { transform: rotate(360deg) } }
+      @keyframes ball1 { 0%,100%{transform:translate(0,0) rotate(0deg)} 30%{transform:translate(-18px,-28px) rotate(40deg)} 65%{transform:translate(14px,18px) rotate(-25deg)} }
+      @keyframes ball2 { 0%,100%{transform:translate(0,0) rotate(0deg)} 40%{transform:translate(22px,-18px) rotate(-50deg)} 70%{transform:translate(-12px,22px) rotate(30deg)} }
+      @keyframes ball3 { 0%,100%{transform:translate(0,0) rotate(0deg)} 35%{transform:translate(-14px,22px) rotate(35deg)} 70%{transform:translate(18px,-16px) rotate(-40deg)} }
     `}</style>
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,maxWidth:480,margin:"0 auto",overflow:"hidden",zIndex:0,pointerEvents:"none"}}>
       <div style={{position:"absolute",top:"-80px",left:"-60px",width:280,height:280,borderRadius:"50%",background:"rgba(37,99,235,0.25)",filter:"blur(60px)",animation:"blob1 8s ease-in-out infinite"}}/>
