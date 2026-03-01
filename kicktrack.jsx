@@ -255,6 +255,114 @@ const BadgesCard = ({sess,chk,objs,resp,streak}) => {
 };
 
 // === PROGRAMME DU JOUR ===
+// === RAPPELS NOTIFICATIONS ===
+const RAPPELS_DEFAULT = [
+  {id:"matin",  label:"Rappel matin",   heure:"08:00", msg:"💪 Programme du jour chargé — ouvre KickTrack et check ta journée.",   actif:false},
+  {id:"soir",   label:"Rappel soir",    heure:"20:00", msg:"🫁 Cohérence cardiaque — 5 min pour récupérer et te préparer au lendemain.", actif:false},
+  {id:"prematch",label:"Avant-match",   heure:"09:00", msg:"⚽ Match aujourd'hui — visualise, respire, sois prêt.",                 actif:false},
+];
+
+// Calcule les ms jusqu'au prochain déclenchement d'un horaire HH:MM
+const msUntil = (heure) => {
+  const [h,m] = heure.split(":").map(Number);
+  const now = new Date();
+  const next = new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
+  if(next<=now) next.setDate(next.getDate()+1);
+  return next-now;
+};
+
+const notifTimers = {}; // map id → timeoutId global pour éviter les doublons
+
+const scheduleNotif = (r) => {
+  if(notifTimers[r.id]) clearTimeout(notifTimers[r.id]);
+  const fire = () => {
+    if(Notification.permission==="granted") new Notification("KickTrack 🏴‍☠️",{body:r.msg,icon:"/favicon.ico"});
+    notifTimers[r.id] = setTimeout(fire, 24*60*60*1000); // replanifie chaque 24h
+  };
+  notifTimers[r.id] = setTimeout(fire, msUntil(r.heure));
+};
+
+const cancelNotif = (id) => { if(notifTimers[id]){clearTimeout(notifTimers[id]);delete notifTimers[id];} };
+
+const RappelsCard = () => {
+  const [rappels,setRappels] = useState(RAPPELS_DEFAULT);
+  const [perm,setPerm] = useState(typeof Notification!=="undefined"?Notification.permission:"unsupported");
+  const [loading,setLoading] = useState(true);
+
+  useEffect(()=>{
+    store.get("kt_rappels").then(v=>{
+      if(v){
+        const merged = RAPPELS_DEFAULT.map(d=>({...d,...(v.find(r=>r.id===d.id)||{})}));
+        setRappels(merged);
+        // Replanifie les rappels actifs au montage
+        merged.filter(r=>r.actif&&perm==="granted").forEach(scheduleNotif);
+      }
+      setLoading(false);
+    });
+  },[]);
+
+  const demanderPermission = async () => {
+    const res = await Notification.requestPermission();
+    setPerm(res);
+    return res;
+  };
+
+  const toggle = async (id) => {
+    let p = perm;
+    if(p==="default") p = await demanderPermission();
+    if(p!=="granted") return;
+
+    const next = rappels.map(r=>{
+      if(r.id!==id) return r;
+      const actif = !r.actif;
+      if(actif) scheduleNotif(r); else cancelNotif(r.id);
+      return {...r,actif};
+    });
+    setRappels(next);
+    await store.set("kt_rappels", next);
+  };
+
+  const changeHeure = async (id,val) => {
+    const next = rappels.map(r=>r.id===id?{...r,heure:val}:r);
+    setRappels(next);
+    await store.set("kt_rappels",next);
+    const r = next.find(x=>x.id===id);
+    if(r.actif&&perm==="granted"){cancelNotif(id);scheduleNotif(r);}
+  };
+
+  if(loading) return null;
+  if(typeof Notification==="undefined") return null;
+
+  return <div style={{...card,background:"linear-gradient(145deg,rgba(6,182,212,0.10),rgba(15,23,42,0.3))",border:"1px solid rgba(6,182,212,0.2)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <span style={lbl}>Rappels</span>
+      {perm==="denied"&&<span style={{fontSize:10,color:"#f87171",fontWeight:700}}>Notifications bloquées dans le navigateur</span>}
+      {perm==="default"&&<span style={{fontSize:10,color:"#67e8f9",fontWeight:600}}>Active pour recevoir les rappels</span>}
+      {perm==="granted"&&<span style={{fontSize:10,color:"#4ade80",fontWeight:700}}>✓ Autorisé</span>}
+    </div>
+    {rappels.map(r=><div key={r.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+      {/* Toggle */}
+      <button onClick={()=>toggle(r.id)} style={{
+        flexShrink:0,width:36,height:20,borderRadius:10,border:"none",cursor:perm==="denied"?"not-allowed":"pointer",
+        background:r.actif?"#06b6d4":"rgba(255,255,255,0.1)",position:"relative",transition:"background .25s",
+        opacity:perm==="denied"?.5:1,
+      }}>
+        <span style={{position:"absolute",top:2,left:r.actif?18:2,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left .2s",display:"block"}}/>
+      </button>
+      {/* Label + heure */}
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:12,fontWeight:700,color:r.actif?"#67e8f9":C.g400,transition:"color .25s"}}>{r.label}</div>
+        <div style={{fontSize:10,color:C.g300,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.msg}</div>
+      </div>
+      {/* Heure */}
+      <input type="time" value={r.heure} onChange={e=>changeHeure(r.id,e.target.value)}
+        style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,
+          color:C.g900,fontSize:12,padding:"3px 6px",fontFamily:"inherit",width:72,flexShrink:0}}/>
+    </div>)}
+    <div style={{fontSize:10,color:C.g300,marginTop:4,fontStyle:"italic"}}>Les rappels fonctionnent quand l'app est ouverte dans le navigateur.</div>
+  </div>;
+};
+
 // === IDENTITÉ DU JOUEUR ===
 const AFFIRMATIONS = [
   q=>`Aujourd'hui, joue avec le caractère d'un joueur ${q}.`,
@@ -471,6 +579,7 @@ const Home = ({sess,objs,chk,go,resp}) => {
       <IdentiteCard />
       <ScoreSemaine sess={sess}/>
       <AffirmationDuJour />
+      <RappelsCard />
       <ProgDuJour />
       <div style={{display:"flex",gap:10}}>
         <button onClick={()=>go("train")} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
