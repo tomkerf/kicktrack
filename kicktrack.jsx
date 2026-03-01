@@ -46,19 +46,34 @@ const LATERAL_PRESETS = [
 ];
 const PROGRAMME = [
   // 0 Dimanche
-  {repos:true, routines:["Cohérence cardiaque 5'","Étirements"]},
+  {repos:true, routines:["Cohérence cardiaque 5'","Étirements"],
+   msg:"Récupère bien — le corps se construit au repos."},
   // 1 Lundi
-  {collectif:"18h30 – 20h00", individuel:"Corde à sauter 5' + Novary 5'", lien:{label:"Ouvrir Novary",url:"https://novary-pro.vercel.app/member"}, routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {collectif:"18h30 – 20h00", taches:["Corde à sauter 5'","Novary 5'"],
+   lien:{label:"Ouvrir Novary",url:"https://novary-pro.vercel.app/member"},
+   routines:["Cohérence cardiaque 5' × 3/jour"],
+   msg:"Lundi de champion — 20 min pour prendre de l'avance sur tout le monde."},
   // 2 Mardi
-  {individuel:"Échelle de rythme 5'\nRenfo : 3×12 squats · 3×10 fentes · 3×40s gainage · 4×10 jump squats", routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {taches:["Échelle de rythme 5'","3×12 squats","3×10 fentes","3×40s gainage","4×10 jump squats"],
+   routines:["Cohérence cardiaque 5' × 3/jour"],
+   msg:"Pas de collectif — c'est là que tu fais vraiment la différence."},
   // 3 Mercredi
-  {collectif:"14h00", individuel:"Corde à sauter 5' + Novary 5'", lien:{label:"Ouvrir Novary",url:"https://novary-pro.vercel.app/member"}, routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {collectif:"14h00", taches:["Corde à sauter 5'","Novary 5'"],
+   lien:{label:"Ouvrir Novary",url:"https://novary-pro.vercel.app/member"},
+   routines:["Cohérence cardiaque 5' × 3/jour"],
+   msg:"Milieu de semaine, milieu de terrain — reste concentré et régulier."},
   // 4 Jeudi
-  {collectif:"18h00", individuel:"Échelle de rythme 5'", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  {collectif:"18h00", taches:["Échelle de rythme 5'"],
+   routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"],
+   msg:"Avant-match — prépare ton corps ET ta tête. Les deux comptent autant."},
   // 5 Vendredi
-  {individuel:"Corde à sauter 5' + Sprints 5'", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  {taches:["Corde à sauter 5'","Sprints 5'"],
+   routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"],
+   msg:"Vendredi de feu — dernier effort avant le match. Donne tout."},
   // 6 Samedi
-  {collectif:"Match !", routines:["Cohérence cardiaque 5' × 3/jour","Nadi Shodhana si besoin"]},
+  {collectif:"Match !", taches:[],
+   routines:["Cohérence cardiaque 5' × 3/jour","Nadi Shodhana si besoin"],
+   msg:"C'est le jour J. Tu t'y es préparé toute la semaine — fais-le voir."},
 ];
 const objCats = [
   {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"],l:"Technique"},
@@ -245,31 +260,98 @@ const ProgDuJour = () => {
   const jours = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
   const p = PROGRAMME[j];
   const iCollectif = tTypes.find(x=>x.id==="collectif").d;
-  const iIndiv = tTypes.find(x=>x.id==="individuel").d;
-  return <div style={{...card,background:"linear-gradient(145deg,rgba(29,78,216,0.18),rgba(15,23,42,0.4))",border:"1px solid rgba(59,130,246,0.25)"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+  const taches = p.taches||[];
+  const [done,setDone]=useState([]);
+  const key=`kt_prog_${today()}`;
+  useEffect(()=>{store.get(key).then(v=>{if(v)setDone(v);});},[]);
+  const toggle=async i=>{
+    const n=done.includes(i)?done.filter(x=>x!==i):[...done,i];
+    setDone(n);await store.set(key,n);
+  };
+  const allDone=taches.length>0&&taches.every((_,i)=>done.includes(i));
+  const doneCnt=taches.filter((_,i)=>done.includes(i)).length;
+
+  return <div style={{...card,
+    background:allDone
+      ?"linear-gradient(145deg,rgba(34,197,94,0.14),rgba(15,23,42,0.4))"
+      :"linear-gradient(145deg,rgba(29,78,216,0.18),rgba(15,23,42,0.4))",
+    border:`1px solid ${allDone?"rgba(34,197,94,0.35)":"rgba(59,130,246,0.25)"}`,
+    transition:"background .8s,border .8s"}}>
+
+    {/* En-tête jour + compteur */}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
       <span style={lbl}>Programme du jour</span>
-      <span style={{fontSize:13,fontWeight:800,color:C.blueL,letterSpacing:-.3}}>{jours[j]}</span>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        {taches.length>0&&<span style={{fontSize:11,fontWeight:800,
+          color:allDone?"#4ade80":C.g400,
+          background:allDone?"rgba(34,197,94,0.15)":"rgba(255,255,255,0.05)",
+          border:`1px solid ${allDone?"rgba(34,197,94,0.3)":"rgba(255,255,255,0.08)"}`,
+          borderRadius:10,padding:"2px 8px",transition:"all .4s"}}>
+          {doneCnt}/{taches.length}
+        </span>}
+        <span style={{fontSize:13,fontWeight:800,color:allDone?"#4ade80":C.blueL,letterSpacing:-.3}}>{jours[j]}</span>
+      </div>
     </div>
+
+    {/* Message de défi */}
+    {p.msg&&<div style={{fontSize:12,fontStyle:"italic",color:allDone?"#86efac":C.g400,
+      marginBottom:10,lineHeight:1.5,borderLeft:`2px solid ${allDone?"rgba(34,197,94,0.4)":"rgba(59,130,246,0.3)"}`,
+      paddingLeft:8,transition:"color .8s,border-color .8s"}}>
+      {allDone?"✅ Journée complète — bien joué Titouan !":p.msg}
+    </div>}
+
     {p.repos
-      ? <div style={{textAlign:"center",padding:"10px 0",color:C.g400,fontSize:14,fontStyle:"italic"}}>Repos — récupère bien, tu le mérites.</div>
+      ? <div style={{textAlign:"center",padding:"8px 0",color:C.g400,fontSize:13,fontStyle:"italic"}}>Repos — récupère bien, tu le mérites.</div>
       : <>
+        {/* Séance collective */}
         {p.collectif&&<div style={{display:"flex",alignItems:"center",gap:10,paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${C.g100}`}}>
           <TypeIco d={iCollectif} s={18} c={C.blue}/>
-          <div><div style={{fontSize:12,fontWeight:700,color:C.g900}}>Séance collective</div><div style={{fontSize:11,color:C.g400}}>{p.collectif}</div></div>
-        </div>}
-        {p.individuel&&<div style={{display:"flex",alignItems:"flex-start",gap:10,paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${C.g100}`}}>
-          <TypeIco d={iIndiv} s={18} c={C.red}/>
-          <div style={{flex:1}}>
-            <div style={{fontSize:12,fontWeight:700,color:C.g900}}>Travail individuel</div>
-            <div style={{fontSize:11,color:C.g400,lineHeight:1.6,whiteSpace:"pre-line"}}>{p.individuel}</div>
-            {p.lien&&<a href={p.lien.url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,marginTop:6,background:"rgba(59,130,246,0.12)",border:"1px solid rgba(59,130,246,0.28)",borderRadius:8,padding:"3px 9px",fontSize:11,fontWeight:700,color:"#93c5fd",textDecoration:"none"}}>
-              <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
-              {p.lien.label}
-            </a>}
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:C.g900}}>Séance collective</div>
+            <div style={{fontSize:11,color:C.g400}}>{p.collectif}</div>
           </div>
         </div>}
-        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}><span style={{...lbl,margin:0}}>Routines</span></div>
+
+        {/* Tâches individuelles cochables */}
+        {taches.length>0&&<div style={{marginBottom:10}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.g500,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>Travail individuel</div>
+          {taches.map((t,i)=>{
+            const checked=done.includes(i);
+            return <button key={i} onClick={()=>toggle(i)} style={{
+              display:"flex",alignItems:"center",gap:10,width:"100%",
+              background:checked?"rgba(34,197,94,0.08)":"rgba(255,255,255,0.03)",
+              border:`1px solid ${checked?"rgba(34,197,94,0.25)":"rgba(255,255,255,0.06)"}`,
+              borderRadius:10,padding:"8px 10px",marginBottom:5,cursor:"pointer",
+              textAlign:"left",transition:"all .25s",
+            }}>
+              <div style={{
+                width:18,height:18,borderRadius:5,flexShrink:0,
+                background:checked?"#22c55e":"transparent",
+                border:`1.5px solid ${checked?"#22c55e":"rgba(148,163,184,0.4)"}`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                transition:"all .2s",
+              }}>
+                {checked&&<svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+              </div>
+              <span style={{fontSize:12,fontWeight:600,color:checked?"#4ade80":C.g900,
+                textDecoration:checked?"line-through":"none",
+                textDecorationColor:"rgba(74,222,128,0.5)",
+                transition:"color .25s"}}>
+                {t}
+              </span>
+            </button>;
+          })}
+          {/* Lien Novary si applicable */}
+          {p.lien&&<a href={p.lien.url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,marginTop:2,background:"rgba(59,130,246,0.12)",border:"1px solid rgba(59,130,246,0.28)",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:700,color:"#93c5fd",textDecoration:"none"}}>
+            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            {p.lien.label}
+          </a>}
+        </div>}
+
+        {/* Routines */}
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+          <span style={{...lbl,margin:0}}>Routines</span>
+        </div>
         {p.routines.map((r,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,marginTop:5}}>
           <div style={{width:5,height:5,borderRadius:"50%",background:C.blueL,flexShrink:0}}/>
           <span style={{fontSize:11,color:C.g400}}>{r}</span>
