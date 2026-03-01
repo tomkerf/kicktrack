@@ -29,14 +29,25 @@ const tTypes = [
   {id:"couloir",d:["M6 3v18","M18 3v18","M10 7l-4 5 4 5","M14 7l4 5-4 5"],l:"Couloir"},
 ];
 const LATERAL_PRESETS = [
-  {text:"Améliorer la qualité du centre tendu", cat:"technique"},
-  {text:"Progresser en 1v1 défensif", cat:"technique"},
-  {text:"Timing des montées et des replis", cat:"tactique"},
-  {text:"Répétitions sprint-récupération (70m)", cat:"physique"},
-  {text:"Prise de décision attaque/défense", cat:"mental"},
-  {text:"Sortie de balle sous pression", cat:"technique"},
-  {text:"Combinaisons couloir avec l'ailier", cat:"tactique"},
-  {text:"Travailler le pied gauche (centre/passe)", cat:"technique"},
+  {text:"Prendre des initiatives sur le terrain", cat:"mental"},
+  {text:"Connaître et appliquer les 5 solutions", cat:"tactique"},
+  {text:"Conserver le ballon sous pression", cat:"technique"},
+  {text:"Jouer au maximum vers l'avant", cat:"tactique"},
+  {text:"Dédoublement — apport offensif", cat:"tactique"},
+  {text:"Améliorer la qualité de mes centres", cat:"technique"},
+  {text:"Défendre l'axe ballon-but", cat:"tactique"},
+  {text:"Travailler les 5 premiers mètres (démarrage)", cat:"physique"},
+  {text:"Développer ma vitesse de pointe", cat:"physique"},
+  {text:"Fréquence des appuis — corde à sauter", cat:"physique"},
+];
+const PROGRAMME = [
+  {repos:true, routines:["Cohérence cardiaque 5'","Étirements"]},
+  {individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {individuel:"Échelle de rythme — 5' · 10\" appuis rapides / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {collectif:"14h00", individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {collectif:"18h00", individuel:"Échelle de rythme — 5' · 10\" appuis rapides / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  {individuel:"Vitesse-Force : ×5 sprints 5m + 1 sprint 30m · 1' récup entre chaque", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
+  {collectif:"Match !", routines:["Cohérence cardiaque 5' × 3/jour","Nadi Shodhana si besoin"]},
 ];
 const objCats = [
   {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"],l:"Technique"},
@@ -130,6 +141,38 @@ const MiniChart = ({data,label,c=C.blue}) => {
   </div>;
 };
 
+// === PROGRAMME DU JOUR ===
+const ProgDuJour = () => {
+  const j = new Date().getDay();
+  const jours = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  const p = PROGRAMME[j];
+  const iCollectif = tTypes.find(x=>x.id==="collectif").d;
+  const iIndiv = tTypes.find(x=>x.id==="individuel").d;
+  return <div style={{...card,background:"linear-gradient(145deg,rgba(29,78,216,0.18),rgba(15,23,42,0.4))",border:"1px solid rgba(59,130,246,0.25)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <span style={lbl}>Programme du jour</span>
+      <span style={{fontSize:13,fontWeight:800,color:C.blueL,letterSpacing:-.3}}>{jours[j]}</span>
+    </div>
+    {p.repos
+      ? <div style={{textAlign:"center",padding:"10px 0",color:C.g400,fontSize:14,fontStyle:"italic"}}>Repos — récupère bien, tu le mérites.</div>
+      : <>
+        {p.collectif&&<div style={{display:"flex",alignItems:"center",gap:10,paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${C.g100}`}}>
+          <TypeIco d={iCollectif} s={18} c={C.blue}/>
+          <div><div style={{fontSize:12,fontWeight:700,color:C.g900}}>Séance collective</div><div style={{fontSize:11,color:C.g400}}>{p.collectif}</div></div>
+        </div>}
+        {p.individuel&&<div style={{display:"flex",alignItems:"flex-start",gap:10,paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${C.g100}`}}>
+          <TypeIco d={iIndiv} s={18} c={C.red}/>
+          <div><div style={{fontSize:12,fontWeight:700,color:C.g900}}>Travail individuel</div><div style={{fontSize:11,color:C.g400,lineHeight:1.5}}>{p.individuel}</div></div>
+        </div>}
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}><span style={{...lbl,margin:0}}>Routines</span></div>
+        {p.routines.map((r,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,marginTop:5}}>
+          <div style={{width:5,height:5,borderRadius:"50%",background:C.blueL,flexShrink:0}}/>
+          <span style={{fontSize:11,color:C.g400}}>{r}</span>
+        </div>)}
+      </>}
+  </div>;
+};
+
 // === PAGES ===
 const Home = ({sess,objs,chk,go}) => {
   const wk = sess.filter(s=>daysSince(s.date)<7).length;
@@ -143,6 +186,13 @@ const Home = ({sess,objs,chk,go}) => {
         <Stat l="Cette sem." v={wk} d="M12 22a10 10 0 110-20 10 10 0 010 20zM8 12l2.5 2.5L16 9" c={C.blue} />
         <Stat l="Série" v={`${streak}j`} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" c={C.red} />
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
+      </div>
+      <ProgDuJour />
+      <div style={{...card,background:"linear-gradient(145deg,rgba(220,38,38,0.12),rgba(15,23,42,0.3))",border:"1px solid rgba(220,38,38,0.2)"}}>
+        <div style={lbl}>Tes super-pouvoirs</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}}>
+          {["Intelligence de jeu","Maîtrise technique","Vitesse"].map(s=><span key={s} style={{background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fca5a5"}}>{s}</span>)}
+        </div>
       </div>
       {lastM && <div style={card}>
         <div style={lbl}>Dernier état mental</div>
