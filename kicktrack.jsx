@@ -425,14 +425,47 @@ const Respiration = () => {
   const [elapsed,setElapsed]=useState(0);
   const [breathExpanded,setBreathExpanded]=useState(false);
   const [sessToday,setSessToday]=useState(0);
+  const [musicOn,setMusicOn]=useState(true);
+  const audioRef=useRef(null);
   const DURATION=300;
   const timeLeft=DURATION-elapsed;
-  // phase derived from breathExpanded (not from elapsed) pour que l'animation soit visible dès le départ
   const phase=breathExpanded?"inspire":"expire";
   const phaseSec=5-(elapsed%5)||5;
 
+  // --- Web Audio ---
+  const initAudio=()=>{
+    if(audioRef.current)return audioRef.current;
+    try{
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const master=ctx.createGain();
+      master.gain.setValueAtTime(0.001,ctx.currentTime);
+      master.connect(ctx.destination);
+      // Fondamentale (ré 146 Hz) + légèrement désaccordée (+3Hz = battement 3Hz méditatif)
+      const mk=(f,vol)=>{const o=ctx.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ctx.currentTime);const g=ctx.createGain();g.gain.setValueAtTime(vol,ctx.currentTime);o.connect(g);g.connect(master);o.start();return o;};
+      const o1=mk(146,0.55); // fondamentale
+      const o2=mk(149,0.35); // +3Hz → battement méditatif
+      const o3=mk(219,0.20); // quinte parfaite (harmonie)
+      audioRef.current={ctx,master,o1,o2,o3};
+      return audioRef.current;
+    }catch(e){return null;}
+  };
+
+  const fadeAudio=(on)=>{
+    if(!audioRef.current)return;
+    const{ctx,master}=audioRef.current;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value,ctx.currentTime);
+    master.gain.linearRampToValueAtTime(on?0.18:0.001,ctx.currentTime+1.5);
+  };
+
   useEffect(()=>{
     store.get("kt_resp_"+today()).then(v=>{if(v)setSessToday(v);});
+    return()=>{
+      if(audioRef.current){
+        try{audioRef.current.o1.stop();audioRef.current.o2.stop();audioRef.current.o3.stop();audioRef.current.ctx.close();}catch(e){}
+        audioRef.current=null;
+      }
+    };
   },[]);
 
   // Timer 1 seconde
@@ -442,11 +475,7 @@ const Respiration = () => {
       setElapsed(e=>{
         if(e>=DURATION-1){
           setRunning(false);
-          setSessToday(s=>{
-            const n=Math.min(s+1,3);
-            store.set("kt_resp_"+today(),n);
-            return n;
-          });
+          setSessToday(s=>{const n=Math.min(s+1,3);store.set("kt_resp_"+today(),n);return n;});
           store.get("kt_resp_total").then(t=>store.set("kt_resp_total",(t||0)+1));
           return 0;
         }
@@ -456,13 +485,42 @@ const Respiration = () => {
     return()=>clearInterval(iv);
   },[running]);
 
-  // Cycle respiration — toggle toutes les 5s, indépendant du timer
+  // Cycle respiration
   useEffect(()=>{
     if(!running){setBreathExpanded(false);return;}
-    setBreathExpanded(true); // inspire immédiatement au démarrage
+    setBreathExpanded(true);
     const iv=setInterval(()=>setBreathExpanded(x=>!x),5000);
     return()=>clearInterval(iv);
   },[running]);
+
+  // Audio fade avec running
+  useEffect(()=>{
+    if(!musicOn)return;
+    if(running){if(audioRef.current)audioRef.current.ctx.resume().catch(()=>{});fadeAudio(true);}
+    else fadeAudio(false);
+  },[running]);
+
+  // Fréquences suivent le souffle
+  useEffect(()=>{
+    if(!audioRef.current||!running||!musicOn)return;
+    const{ctx,master,o1,o2,o3}=audioRef.current;
+    const now=ctx.currentTime;
+    const dur=4.5;
+    const ramp=(node,from,to)=>{node.cancelScheduledValues(now);node.setValueAtTime(from,now);node.linearRampToValueAtTime(to,now+dur);};
+    if(breathExpanded){
+      // INSPIRE — montée en fréquence + volume
+      ramp(o1.frequency,o1.frequency.value,174);
+      ramp(o2.frequency,o2.frequency.value,177);
+      ramp(o3.frequency,o3.frequency.value,261);
+      ramp(master.gain,master.gain.value,0.26);
+    }else{
+      // EXPIRE — descente en fréquence + volume doux
+      ramp(o1.frequency,o1.frequency.value,136);
+      ramp(o2.frequency,o2.frequency.value,139);
+      ramp(o3.frequency,o3.frequency.value,204);
+      ramp(master.gain,master.gain.value,0.09);
+    }
+  },[breathExpanded]);
 
   const mins=Math.floor(timeLeft/60);
   const secs=timeLeft%60;
@@ -475,9 +533,17 @@ const Respiration = () => {
         <div style={lbl}>Cohérence cardiaque</div>
         <div style={{fontSize:11,color:C.g400,marginTop:2}}>5 min · 5s inspire / 5s expire</div>
       </div>
-      <div style={{textAlign:"center"}}>
-        <div style={{fontSize:20,fontWeight:800,color:sessToday>=3?"#22c55e":C.blueL}}>{sessToday}/3</div>
-        <div style={{fontSize:9,color:C.g400,fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>aujourd'hui</div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <button onClick={()=>{
+          const next=!musicOn;setMusicOn(next);
+          if(audioRef.current){const{ctx,master}=audioRef.current;master.gain.setTargetAtTime(next&&running?0.18:0.001,ctx.currentTime,0.5);}
+        }} style={{background:"none",border:`1px solid ${musicOn?"rgba(59,130,246,0.4)":"rgba(148,163,184,0.2)"}`,borderRadius:14,padding:"4px 10px",color:musicOn?C.blueL:C.g400,fontSize:11,cursor:"pointer",fontWeight:700,lineHeight:1.4}}>
+          {musicOn?"♫ Son":"♫ Off"}
+        </button>
+        <div style={{textAlign:"center"}}>
+          <div style={{fontSize:20,fontWeight:800,color:sessToday>=3?"#22c55e":C.blueL}}>{sessToday}/3</div>
+          <div style={{fontSize:9,color:C.g400,fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>aujourd'hui</div>
+        </div>
       </div>
     </div>
 
@@ -513,7 +579,12 @@ const Respiration = () => {
         <div style={{height:"100%",width:`${pct*100}%`,background:"linear-gradient(90deg,#3b82f6,#1d4ed8)",borderRadius:2,transition:"width .5s linear"}}/>
       </div>
 
-      <button onClick={()=>setRunning(r=>!r)} style={{...btnP,width:"auto",padding:"12px 40px",fontSize:14}}>
+      <button onClick={()=>{
+        if(!running){
+          if(musicOn){if(!audioRef.current)initAudio();else audioRef.current.ctx.resume().catch(()=>{});}
+        }
+        setRunning(r=>!r);
+      }} style={{...btnP,width:"auto",padding:"12px 40px",fontSize:14}}>
         {running?"Pause":elapsed===0?"Démarrer":"Reprendre"}
       </button>
 
