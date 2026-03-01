@@ -1186,10 +1186,8 @@ const Resultats = () => {
       const from=new Date(now); from.setDate(from.getDate()-21);
       const to=new Date(now); to.setDate(to.getDate()+14);
       const fmt=d=>d.toISOString().split("T")[0];
-      // Token en param URL = pas de preflight CORS, compatible football-data.org v4
-      const res=await fetch(
-        `${FD_BASE}/competitions/FL1/matches?dateFrom=${fmt(from)}&dateTo=${fmt(to)}&token=${FD_KEY}`
-      );
+      const apiUrl=`${FD_BASE}/competitions/FL1/matches?dateFrom=${fmt(from)}&dateTo=${fmt(to)}&token=${FD_KEY}`;
+      const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`);
       if(!res.ok) throw new Error(`Erreur API (${res.status})`);
       const data=await res.json();
       setMatches(data.matches||[]);
