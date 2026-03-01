@@ -42,7 +42,7 @@ const LATERAL_PRESETS = [
 ];
 const PROGRAMME = [
   {repos:true, routines:["Cohérence cardiaque 5'","Étirements"]},
-  {individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
+  {collectif:"18h30 – 20h00", individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
   {individuel:"Échelle de rythme — 5' · 10\" appuis rapides / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
   {collectif:"14h00", individuel:"Corde à sauter — 5' · 10\" saut / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour"]},
   {collectif:"18h00", individuel:"Échelle de rythme — 5' · 10\" appuis rapides / 20\" récup", routines:["Cohérence cardiaque 5' × 3/jour","Affirmations · Reconnaissance · Visualisation"]},
