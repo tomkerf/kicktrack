@@ -28,7 +28,7 @@ const tTypes = [
   {id:"technique",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 12m-1 0a1 1 0 102 0 1 1 0 10-2 0"],l:"Technique"},
   {id:"couloir",d:["M6 3v18","M18 3v18","M10 7l-4 5 4 5","M14 7l4 5-4 5"],l:"Couloir"},
 ];
-const LATERAL_PRESETS = [
+const COACH_PRESETS = [
   {text:"Prendre des initiatives sur le terrain", cat:"mental"},
   {text:"Connaître et appliquer les 5 solutions", cat:"tactique"},
   {text:"Conserver le ballon sous pression", cat:"technique"},
@@ -36,9 +36,13 @@ const LATERAL_PRESETS = [
   {text:"Dédoublement — apport offensif", cat:"tactique"},
   {text:"Améliorer la qualité de mes centres", cat:"technique"},
   {text:"Défendre l'axe ballon-but", cat:"tactique"},
+];
+const LATERAL_PRESETS = [
   {text:"Travailler les 5 premiers mètres (démarrage)", cat:"physique"},
   {text:"Développer ma vitesse de pointe", cat:"physique"},
   {text:"Fréquence des appuis — corde à sauter", cat:"physique"},
+  {text:"Progresser en 1v1 défensif", cat:"technique"},
+  {text:"Timing des montées et des replis", cat:"tactique"},
 ];
 const PROGRAMME = [
   {repos:true, routines:["Cohérence cardiaque 5'","Étirements"]},
@@ -330,7 +334,14 @@ const Obj = ({objs,setObjs}) => {
           </div>
         </div>
         <div style={{marginBottom:12}}>
-          <span style={lbl}>Suggestions latéral</span>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+            <span style={lbl}>Objectifs fixés avec le coach</span>
+            <span style={{fontSize:9,fontWeight:800,color:"#f59e0b",background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"2px 7px",letterSpacing:.5}}>COACH</span>
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+            {COACH_PRESETS.map((p,i)=><button key={i} onClick={()=>sF(x=>({...x,text:p.text,cat:p.cat}))} style={{background:f.text===p.text?"rgba(245,158,11,0.2)":"rgba(245,158,11,0.06)",border:f.text===p.text?"1px solid rgba(245,158,11,0.7)":"1px solid rgba(245,158,11,0.25)",borderRadius:20,padding:"5px 12px",fontSize:11,color:f.text===p.text?"#fbbf24":C.g400,cursor:"pointer",fontWeight:f.text===p.text?700:500}}>{p.text}</button>)}
+          </div>
+          <span style={lbl}>Autres suggestions</span>
           <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:4,marginBottom:10}}>
             {LATERAL_PRESETS.map((p,i)=><button key={i} onClick={()=>sF(x=>({...x,text:p.text,cat:p.cat}))} style={{background:f.text===p.text?`${C.blue}22`:"rgba(255,255,255,0.04)",border:f.text===p.text?`1px solid ${C.blue}60`:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:"5px 12px",fontSize:11,color:f.text===p.text?C.blueL:C.g400,cursor:"pointer",fontWeight:f.text===p.text?700:400}}>{p.text}</button>)}
           </div>
