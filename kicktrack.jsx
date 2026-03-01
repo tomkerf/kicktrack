@@ -178,12 +178,42 @@ const TabBar = ({tab,set}) => {
   </div>;
 };
 
+const useCounter = (target, duration=700) => {
+  const [val,setVal] = useState(0);
+  useEffect(()=>{
+    if(!target){setVal(0);return;}
+    let start=null;
+    const step=(ts)=>{
+      if(!start)start=ts;
+      const p=Math.min((ts-start)/duration,1);
+      const eased=1-Math.pow(1-p,3); // ease-out cubic
+      setVal(Math.round(target*eased));
+      if(p<1)requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  },[target]);
+  return val;
+};
+
+const FadeUp = ({children,delay=0}) => (
+  <div style={{animation:`slideUp .46s cubic-bezier(0.22,1,0.36,1) ${delay}ms both`}}>
+    {children}
+  </div>
+);
+
 const StatIco = ({d,c}) => <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{(Array.isArray(d)?d:[d]).map((p,i)=><path key={i} d={p}/>)}</svg>;
-const Stat = ({l,v,d,c=C.blue}) => <div style={{background:`linear-gradient(145deg,${c}22,${c}08)`,border:`1px solid ${c}30`,borderRadius:20,padding:"16px 10px",flex:1,textAlign:"center",boxShadow:`0 4px 24px ${c}20, inset 0 1px 0 rgba(255,255,255,0.08)`}}>
-  <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><StatIco d={d} c={c}/></div>
-  <div style={{fontSize:24,fontWeight:800,color:"#f1f5f9",letterSpacing:-.5}}>{v}</div>
-  <div style={{fontSize:9,color:"rgba(148,163,184,0.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginTop:3}}>{l}</div>
-</div>;
+const Stat = ({l,v,d,c=C.blue}) => {
+  const m = typeof v==="string"?v.match(/^(\d+)(.*)$/):null;
+  const num = m?parseInt(m[1]):(typeof v==="number"?v:null);
+  const suffix = m?m[2]:"";
+  const animated = useCounter(num??0);
+  const display = num!==null?`${animated}${suffix}`:v;
+  return <div style={{background:`linear-gradient(145deg,${c}22,${c}08)`,border:`1px solid ${c}30`,borderRadius:20,padding:"16px 10px",flex:1,textAlign:"center",boxShadow:`0 4px 24px ${c}20, inset 0 1px 0 rgba(255,255,255,0.08)`}}>
+    <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><StatIco d={d} c={c}/></div>
+    <div style={{fontSize:24,fontWeight:800,color:"#f1f5f9",letterSpacing:-.5}}>{display}</div>
+    <div style={{fontSize:9,color:"rgba(148,163,184,0.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginTop:3}}>{l}</div>
+  </div>;
+};
 
 const MoodPick = ({v,set}) => <div style={{display:"flex",gap:8,justifyContent:"center"}}>
   {moods.map(m=><button key={m.v} onClick={()=>set(m.v)} style={{background:v===m.v?`${moodColors[m.v]}18`:"rgba(255,255,255,0.04)",border:v===m.v?`2px solid ${moodColors[m.v]}60`:"2px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"10px 6px",cursor:"pointer",textAlign:"center",minWidth:52,transition:"all .2s"}}>
@@ -596,25 +626,25 @@ const Home = ({sess,objs,chk,go,resp}) => {
     <div style={{padding:"16px 16px 100px",position:"relative"}}>
       <FloatingBalls />
       <div style={{position:"relative",zIndex:1}}>
-      <div style={{display:"flex",gap:10,marginBottom:16}}>
+      <FadeUp delay={0}><div style={{display:"flex",gap:10,marginBottom:16}}>
         <Stat l="Cette sem." v={wk} d="M12 22a10 10 0 110-20 10 10 0 010 20zM8 12l2.5 2.5L16 9" c={C.blue} />
         <Stat l="Série" v={`${streak}j`} d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" c={C.red} />
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
-      </div>
-      <XPCard sess={sess} chk={chk} objs={objs} resp={resp}/>
-      <IdentiteCard />
-      <ScoreSemaine sess={sess}/>
-      <AffirmationDuJour />
-      <RappelsCard />
-      <ProgDuJour />
-      <div style={{display:"flex",gap:10}}>
+      </div></FadeUp>
+      <FadeUp delay={80}><XPCard sess={sess} chk={chk} objs={objs} resp={resp}/></FadeUp>
+      <FadeUp delay={160}><IdentiteCard /></FadeUp>
+      <FadeUp delay={240}><ScoreSemaine sess={sess}/></FadeUp>
+      <FadeUp delay={320}><AffirmationDuJour /></FadeUp>
+      <FadeUp delay={400}><RappelsCard /></FadeUp>
+      <FadeUp delay={480}><ProgDuJour /></FadeUp>
+      <FadeUp delay={560}><div style={{display:"flex",gap:10}}>
         <button onClick={()=>go("train")} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
           <Ico d={iPlus} s={18}/> Séance
         </button>
         <button onClick={()=>go("mental")} style={{...btnP,background:`linear-gradient(135deg,${C.red},${C.navy})`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
           <Ico d={iBrain} s={18}/> Check-in
         </button>
-      </div>
+      </div></FadeUp>
       </div>
     </div>
   </>;
@@ -1127,6 +1157,7 @@ export default function KickTrack() {
       @keyframes ball1 { 0%,100%{transform:translate(0,0) rotate(0deg)} 30%{transform:translate(-18px,-28px) rotate(40deg)} 65%{transform:translate(14px,18px) rotate(-25deg)} }
       @keyframes ball2 { 0%,100%{transform:translate(0,0) rotate(0deg)} 40%{transform:translate(22px,-18px) rotate(-50deg)} 70%{transform:translate(-12px,22px) rotate(30deg)} }
       @keyframes ball3 { 0%,100%{transform:translate(0,0) rotate(0deg)} 35%{transform:translate(-14px,22px) rotate(35deg)} 70%{transform:translate(18px,-16px) rotate(-40deg)} }
+      @keyframes slideUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
     `}</style>
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,maxWidth:480,margin:"0 auto",overflow:"hidden",zIndex:0,pointerEvents:"none"}}>
       <div style={{position:"absolute",top:"-80px",left:"-60px",width:280,height:280,borderRadius:"50%",background:"rgba(37,99,235,0.25)",filter:"blur(60px)",animation:"blob1 8s ease-in-out infinite"}}/>
