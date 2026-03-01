@@ -168,6 +168,7 @@ const TabBar = ({tab,set}) => {
     {id:"train",d:"M22 12h-4l-3 9L9 3l-3 9H2",l:"Entraîne."},
     {id:"obj",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z","M12 12m-1 0a1 1 0 102 0 1 1 0 10-2 0"],l:"Objectifs"},
     {id:"mental",d:["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 13s1.5 3 4 3 4-3 4-3","M9 9h.01","M15 9h.01"],l:"Mental"},
+    {id:"ligue1",d:["M6 9H3V3h18v6h-3","M6 9a6 6 0 0012 0","M9 21h6","M12 15v6"],l:"Ligue 1"},
     {id:"stats",d:"M18 20V10M12 20V4M6 20v-6",l:"Stats"},
   ];
   return <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(15,23,42,0.7)",backdropFilter:"blur(24px) saturate(180%)",WebkitBackdropFilter:"blur(24px) saturate(180%)",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,8px)",maxWidth:480,margin:"0 auto"}}>
@@ -1124,6 +1125,151 @@ const Stats = ({sess,chk,objs,resp}) => {
   </>;
 };
 
+// === RÉSULTATS LIGUE 1 ===
+const FD_KEY = "d0e59dca14bf46448e54da7177b5d98c";
+const FD_BASE = "https://api.football-data.org/v4";
+
+const fmtDate = d => new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+const fmtMatchDate = iso => new Date(iso).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+const fmtTime = iso => new Date(iso).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+
+const MatchCard = ({m}) => {
+  const fin = m.status==="FINISHED";
+  const live = m.status==="IN_PLAY"||m.status==="PAUSED";
+  const sc = m.score?.fullTime;
+  const homeW = fin&&sc&&sc.home>sc.away;
+  const awayW = fin&&sc&&sc.away>sc.home;
+  return <div style={{display:"flex",alignItems:"center",gap:6,padding:"9px 10px",
+    background:"rgba(255,255,255,0.04)",borderRadius:12,marginBottom:5,
+    border:`1px solid ${live?"rgba(239,68,68,0.4)":"rgba(255,255,255,0.06)"}`}}>
+    {/* Équipe domicile */}
+    <div style={{flex:1,display:"flex",alignItems:"center",gap:6,minWidth:0}}>
+      {m.homeTeam.crest&&<img src={m.homeTeam.crest} style={{width:20,height:20,objectFit:"contain",flexShrink:0}} alt=""/>}
+      <span style={{fontSize:12,fontWeight:homeW?800:500,
+        color:homeW?"#f1f5f9":fin?"#94a3b8":"#cbd5e1",
+        overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+        {m.homeTeam.shortName||m.homeTeam.name}
+      </span>
+    </div>
+    {/* Score / heure */}
+    <div style={{flexShrink:0,minWidth:52,textAlign:"center"}}>
+      {fin
+        ? <span style={{fontSize:15,fontWeight:800,color:"#f1f5f9",letterSpacing:1}}>
+            {sc.home} <span style={{color:C.g300,fontSize:11}}>–</span> {sc.away}
+          </span>
+        : live
+        ? <span style={{fontSize:11,fontWeight:800,color:"#ef4444",animation:"pulse 1s infinite"}}>LIVE</span>
+        : <span style={{fontSize:11,fontWeight:700,color:C.g400}}>{fmtTime(m.utcDate)}</span>}
+    </div>
+    {/* Équipe extérieure */}
+    <div style={{flex:1,display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end",minWidth:0}}>
+      <span style={{fontSize:12,fontWeight:awayW?800:500,
+        color:awayW?"#f1f5f9":fin?"#94a3b8":"#cbd5e1",
+        overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"right"}}>
+        {m.awayTeam.shortName||m.awayTeam.name}
+      </span>
+      {m.awayTeam.crest&&<img src={m.awayTeam.crest} style={{width:20,height:20,objectFit:"contain",flexShrink:0}} alt=""/>}
+    </div>
+  </div>;
+};
+
+const Resultats = () => {
+  const [matches,setMatches]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState(null);
+  const [vue,setVue]=useState("resultats"); // "resultats" | "avenir"
+  const [lastFetch,setLastFetch]=useState(null);
+
+  const fetchData = async () => {
+    setLoading(true); setError(null);
+    try {
+      const now=new Date();
+      const from=new Date(now); from.setDate(from.getDate()-21);
+      const to=new Date(now); to.setDate(to.getDate()+14);
+      const fmt=d=>d.toISOString().split("T")[0];
+      const res=await fetch(
+        `${FD_BASE}/competitions/FL1/matches?dateFrom=${fmt(from)}&dateTo=${fmt(to)}`,
+        {headers:{"X-Auth-Token":FD_KEY}}
+      );
+      if(!res.ok) throw new Error(`Erreur API (${res.status})`);
+      const data=await res.json();
+      setMatches(data.matches||[]);
+      setLastFetch(Date.now());
+    } catch(e){ setError(e.message); }
+    finally{ setLoading(false); }
+  };
+
+  useEffect(()=>{ fetchData(); },[]);
+
+  const fin=[...matches.filter(m=>m.status==="FINISHED")].reverse();
+  const avenir=matches.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED"||m.status==="IN_PLAY"||m.status==="PAUSED");
+  const shown=vue==="resultats"?fin:avenir;
+
+  // Grouper par journée
+  const grouped=shown.reduce((acc,m)=>{
+    const k=`Journée ${m.matchday}`;
+    if(!acc[k])acc[k]=[];
+    acc[k].push(m); return acc;
+  },{});
+
+  return <>
+    <Header title="Ligue 1" sub="Résultats & Calendrier"/>
+    <div style={{padding:"16px 16px 100px"}}>
+
+      {/* Toggle résultats / à venir */}
+      <div style={{display:"flex",gap:6,marginBottom:14,background:"rgba(255,255,255,0.05)",borderRadius:14,padding:4}}>
+        {[{id:"resultats",l:"Résultats"},{id:"avenir",l:"À venir"}].map(v=>(
+          <button key={v.id} onClick={()=>setVue(v.id)} style={{
+            flex:1,padding:"8px 0",borderRadius:10,border:"none",cursor:"pointer",fontSize:13,fontWeight:700,
+            background:vue===v.id?"rgba(59,130,246,0.25)":"transparent",
+            color:vue===v.id?"#60a5fa":C.g400,
+            transition:"all .2s",
+          }}>{v.l}</button>
+        ))}
+      </div>
+
+      {/* Refresh + last update */}
+      <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginBottom:10}}>
+        {lastFetch&&<span style={{fontSize:10,color:C.g300}}>
+          Mis à jour {new Date(lastFetch).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
+        </span>}
+        <button onClick={fetchData} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",
+          borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:700,color:C.g400,cursor:"pointer"}}>
+          ↻ Actualiser
+        </button>
+      </div>
+
+      {loading&&<div style={{textAlign:"center",padding:"40px 0"}}>
+        <div style={{display:"inline-block",width:28,height:28,borderRadius:"50%",
+          border:"2px solid rgba(59,130,246,0.3)",borderTopColor:"#3b82f6",
+          animation:"spin 1s linear infinite",marginBottom:12}}/>
+        <div style={{color:C.g400,fontSize:13}}>Chargement…</div>
+      </div>}
+
+      {error&&<div style={{...card,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",textAlign:"center",padding:20}}>
+        <div style={{fontSize:13,color:"#f87171",marginBottom:8}}>{error}</div>
+        <button onClick={fetchData} style={{...btnP,padding:"8px 20px",fontSize:12}}>Réessayer</button>
+      </div>}
+
+      {!loading&&!error&&Object.keys(grouped).length===0&&(
+        <div style={{textAlign:"center",padding:"40px 0",color:C.g400,fontSize:13}}>
+          Aucun match sur cette période.
+        </div>
+      )}
+
+      {!loading&&!error&&Object.entries(grouped).map(([journee,ms])=>(
+        <div key={journee} style={{marginBottom:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+            <span style={{...lbl,margin:0}}>{journee}</span>
+            <span style={{fontSize:10,color:C.g300}}>{fmtMatchDate(ms[0].utcDate)}</span>
+          </div>
+          {ms.map(m=><MatchCard key={m.id} m={m}/>)}
+        </div>
+      ))}
+    </div>
+  </>;
+};
+
 // === MAIN APP ===
 export default function KickTrack() {
   const [tab,setTab]=useState("home");
@@ -1169,6 +1315,7 @@ export default function KickTrack() {
       {tab==="train"&&<Train sess={sess} setSess={setSess}/>}
       {tab==="obj"&&<Obj objs={objs} setObjs={setObjs}/>}
       {tab==="mental"&&<Mental chk={chk} setChk={setChk}/>}
+      {tab==="ligue1"&&<Resultats/>}
       {tab==="stats"&&<Stats sess={sess} chk={chk} objs={objs} resp={resp}/>}
     </div>
     <TabBar tab={tab} set={setTab}/>
