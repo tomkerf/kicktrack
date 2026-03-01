@@ -98,7 +98,7 @@ const iCheck="M20 6L9 17l-5-5";
 const iBrain="M12 2a7 7 0 017 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 0 017-7zM9 22h6M10 18v4M14 18v4";
 
 const Header = ({title,sub}) => (
-  <div style={{background:"linear-gradient(155deg,#0d2554 0%,#1d4ed8 55%,#1a3a6e 100%)",paddingTop:"calc(24px + env(safe-area-inset-top))",paddingBottom:30,paddingLeft:20,paddingRight:20,borderRadius:"0 0 30px 30px",color:"#fff",position:"relative",overflow:"hidden",boxShadow:"0 12px 48px rgba(29,78,216,0.4)"}}>
+  <div style={{background:"linear-gradient(155deg,#0d2554 0%,#1d4ed8 55%,#1a3a6e 100%)",paddingTop:"calc(24px + env(safe-area-inset-top))",paddingBottom:30,paddingLeft:20,paddingRight:20,borderRadius:"0 0 30px 30px",color:"#fff",position:"sticky",top:0,zIndex:10,overflow:"hidden",boxShadow:"0 12px 48px rgba(29,78,216,0.4)"}}>
     <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)"}}/>
     <div style={{position:"absolute",bottom:-8,right:-10,opacity:.06,fontSize:120}}>⚓</div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
