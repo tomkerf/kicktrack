@@ -357,6 +357,96 @@ const Obj = ({objs,setObjs}) => {
   </>;
 };
 
+const Respiration = () => {
+  const [running,setRunning]=useState(false);
+  const [elapsed,setElapsed]=useState(0);
+  const [sessToday,setSessToday]=useState(0);
+  const DURATION=300;
+  const timeLeft=DURATION-elapsed;
+  const phase=Math.floor(elapsed/5)%2===0?"inspire":"expire";
+  const phaseSec=5-(elapsed%5);
+
+  useEffect(()=>{
+    store.get("kt_resp_"+today()).then(v=>{if(v)setSessToday(v);});
+  },[]);
+
+  useEffect(()=>{
+    if(!running)return;
+    const iv=setInterval(()=>{
+      setElapsed(e=>{
+        if(e>=DURATION-1){
+          setRunning(false);
+          setSessToday(s=>{
+            const n=Math.min(s+1,3);
+            store.set("kt_resp_"+today(),n);
+            return n;
+          });
+          return 0;
+        }
+        return e+1;
+      });
+    },1000);
+    return()=>clearInterval(iv);
+  },[running]);
+
+  const mins=Math.floor(timeLeft/60);
+  const secs=timeLeft%60;
+  const pct=elapsed/DURATION;
+  const started=elapsed>0||running;
+
+  return <div style={{...card,background:"linear-gradient(145deg,rgba(59,130,246,0.12),rgba(15,23,42,0.4))",border:"1px solid rgba(59,130,246,0.25)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+      <div>
+        <div style={lbl}>Cohérence cardiaque</div>
+        <div style={{fontSize:11,color:C.g400,marginTop:2}}>5 min · 5s inspire / 5s expire</div>
+      </div>
+      <div style={{textAlign:"center"}}>
+        <div style={{fontSize:20,fontWeight:800,color:sessToday>=3?"#22c55e":C.blueL}}>{sessToday}/3</div>
+        <div style={{fontSize:9,color:C.g400,fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>aujourd'hui</div>
+      </div>
+    </div>
+
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
+      <div style={{position:"relative",width:160,height:160,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px solid rgba(59,130,246,0.15)"}}/>
+        <div style={{
+          width:phase==="inspire"?140:80,
+          height:phase==="inspire"?140:80,
+          borderRadius:"50%",
+          background:phase==="inspire"
+            ?"radial-gradient(circle,rgba(59,130,246,0.35),rgba(29,78,216,0.1))"
+            :"radial-gradient(circle,rgba(148,163,184,0.2),rgba(15,23,42,0.1))",
+          border:phase==="inspire"?"2px solid rgba(59,130,246,0.6)":"2px solid rgba(148,163,184,0.3)",
+          boxShadow:phase==="inspire"?"0 0 40px rgba(59,130,246,0.4)":"0 0 20px rgba(148,163,184,0.1)",
+          transition:"width 5s ease-in-out,height 5s ease-in-out,background 5s ease-in-out,border 5s ease-in-out,box-shadow 5s ease-in-out",
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,
+        }}>
+          {running&&<>
+            <div style={{fontSize:13,fontWeight:800,color:phase==="inspire"?"#93c5fd":C.g400,letterSpacing:.5}}>{phase==="inspire"?"INSPIRE":"EXPIRE"}</div>
+            <div style={{fontSize:22,fontWeight:800,color:phase==="inspire"?C.blueL:C.g300}}>{phaseSec}</div>
+          </>}
+          {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",padding:"0 12px"}}>Prêt à<br/>commencer</div>}
+          {!running&&started&&<div style={{fontSize:11,color:C.g400}}>En pause</div>}
+        </div>
+      </div>
+
+      <div style={{fontSize:36,fontWeight:800,color:C.g900,letterSpacing:-1,fontVariantNumeric:"tabular-nums"}}>
+        {mins}:{String(secs).padStart(2,"0")}
+      </div>
+
+      <div style={{width:"100%",height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
+        <div style={{height:"100%",width:`${pct*100}%`,background:"linear-gradient(90deg,#3b82f6,#1d4ed8)",borderRadius:2,transition:"width .5s linear"}}/>
+      </div>
+
+      <button onClick={()=>{if(!running&&elapsed===0)setElapsed(0);setRunning(r=>!r);}} style={{...btnP,width:"auto",padding:"12px 40px",fontSize:14}}>
+        {running?"Pause":elapsed===0?"Démarrer":"Reprendre"}
+      </button>
+
+      {(started&&!running)&&<button onClick={()=>{setElapsed(0);setRunning(false);}} style={{background:"none",border:"none",color:C.g400,fontSize:12,cursor:"pointer",textDecoration:"underline"}}>Recommencer</button>}
+    </div>
+  </div>;
+};
+
 const Mental = ({chk,setChk}) => {
   const [add,setAdd]=useState(false);
   const [f,sF]=useState({mood:3,conf:7,motiv:7,notes:"",date:today()});
@@ -365,6 +455,7 @@ const Mental = ({chk,setChk}) => {
   return <>
     <Header title="Check-in Mental" sub="Comment tu te sens?" />
     <div style={{padding:"16px 16px 100px"}}>
+      <Respiration />
       {!add?<>
         <button onClick={()=>setAdd(true)} style={{...btnP,background:`linear-gradient(135deg,${C.red},${C.navy})`,display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16}}>
           <Ico d={iBrain} s={18}/> Nouveau check-in
