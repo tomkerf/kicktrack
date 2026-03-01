@@ -125,7 +125,7 @@ const Header = ({title,sub}) => (
     <div style={{position:"absolute",bottom:14,right:24,opacity:.07,fontSize:84}}>⚓</div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
-        <img src={LOGO} alt="USC" style={{width:44,height:52,objectFit:"contain"}} />
+        <img src={LOGO} alt="USC" style={{height:52,width:"auto",objectFit:"contain"}} />
         <div>
           <div style={{fontSize:20,fontWeight:800,letterSpacing:-.5}}>{title}</div>
           {sub && <div style={{fontSize:13,opacity:.8,marginTop:2}}>{sub}</div>}
