@@ -255,6 +255,92 @@ const BadgesCard = ({sess,chk,objs,resp,streak}) => {
 };
 
 // === PROGRAMME DU JOUR ===
+// === IDENTITÉ DU JOUEUR ===
+const AFFIRMATIONS = [
+  q=>`Aujourd'hui, joue avec le caractère d'un joueur ${q}.`,
+  q=>`Un joueur ${q} ne lâche jamais — c'est toi ça.`,
+  q=>`Tu es ${q} — montre-le sur chaque action.`,
+  q=>`Chaque effort aujourd'hui te rend plus ${q}.`,
+  q=>`Avant d'entrer sur le terrain : tu es ${q}.`,
+  q=>`Les grands joueurs sont ${q} dans les moments durs — comme toi.`,
+  q=>`Reste ${q} du premier au dernier sprint.`,
+];
+
+const IdentiteCard = () => {
+  const [identite,setIdentite]=useState(null);
+  const [edit,setEdit]=useState(false);
+  const [phrase,setPhrase]=useState("");
+  const [qualites,setQualites]=useState(["","",""]);
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{store.get("kt_identite").then(v=>{
+    if(v){setIdentite(v);setPhrase(v.phrase||"");setQualites(v.qualites&&v.qualites.length>=3?v.qualites:[...(v.qualites||[]),...["","",""]].slice(0,3));}
+    else setEdit(true);
+    setLoading(false);
+  });},[]);
+  const save=async()=>{
+    const q=qualites.map(x=>x.trim()).filter(Boolean);
+    const data={phrase:phrase.trim(),qualites:q};
+    await store.set("kt_identite",data);setIdentite(data);setEdit(false);
+  };
+  if(loading)return null;
+  const qPh=["rapide","intelligent","combatif"];
+  return <div style={{...card,background:"linear-gradient(145deg,rgba(220,38,38,0.12),rgba(15,23,42,0.3))",border:"1px solid rgba(220,38,38,0.2)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:edit?12:8}}>
+      <span style={lbl}>Mon identité de joueur</span>
+      {!edit&&identite&&<button onClick={()=>setEdit(true)} style={{background:"none",border:"none",cursor:"pointer",padding:4,color:C.g400}}>
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>}
+    </div>
+    {edit?<>
+      <div style={{marginBottom:10}}>
+        <span style={{...lbl,marginBottom:4}}>Je veux devenir…</span>
+        <textarea value={phrase} onChange={e=>setPhrase(e.target.value)}
+          placeholder="ex: un milieu de terrain rapide et intelligent, capable de jouer professionnel"
+          rows={3} style={{...inp,resize:"none",lineHeight:1.5,fontSize:13}}/>
+      </div>
+      <div style={{marginBottom:12}}>
+        <span style={{...lbl,marginBottom:4}}>Mes 3 qualités de joueur</span>
+        {qualites.map((q,i)=><input key={i} value={q}
+          onChange={e=>{const n=[...qualites];n[i]=e.target.value;setQualites(n);}}
+          placeholder={`Qualité ${i+1} — ex: ${qPh[i]}`}
+          style={{...inp,marginBottom:6,fontSize:13}}/>)}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={save} style={{...btnP,padding:"10px 16px",fontSize:13}}>Enregistrer</button>
+        {identite&&<button onClick={()=>setEdit(false)} style={{...btnP,background:"rgba(255,255,255,0.08)",padding:"10px 16px",fontSize:13,boxShadow:"none"}}>Annuler</button>}
+      </div>
+    </>:identite?<>
+      {identite.phrase&&<div style={{fontSize:13,fontStyle:"italic",color:"#fca5a5",lineHeight:1.6,marginBottom:10,borderLeft:"2px solid rgba(220,38,38,0.4)",paddingLeft:8}}>
+        "{identite.phrase}"
+      </div>}
+      {identite.qualites&&identite.qualites.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+        {identite.qualites.map((q,i)=><span key={i} style={{background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fca5a5"}}>{q}</span>)}
+      </div>}
+    </>:null}
+  </div>;
+};
+
+const AffirmationDuJour = () => {
+  const [aff,setAff]=useState(null);
+  useEffect(()=>{store.get("kt_identite").then(v=>{
+    if(v&&v.qualites&&v.qualites.length>0){
+      const j=new Date().getDay();
+      const q=v.qualites[j%v.qualites.length];
+      setAff(AFFIRMATIONS[j%AFFIRMATIONS.length](q));
+    }
+  });},[]);
+  if(!aff)return null;
+  return <div style={{...card,background:"linear-gradient(145deg,rgba(245,158,11,0.1),rgba(15,23,42,0.3))",border:"1px solid rgba(245,158,11,0.2)",padding:"12px 16px"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10}}>
+      <span style={{fontSize:20,flexShrink:0}}>💬</span>
+      <div>
+        <span style={{...lbl,margin:0,display:"block",marginBottom:2}}>Affirmation du jour</span>
+        <div style={{fontSize:13,fontStyle:"italic",color:"#fcd34d",lineHeight:1.5}}>{aff}</div>
+      </div>
+    </div>
+  </div>;
+};
+
 const ProgDuJour = () => {
   const j = new Date().getDay();
   const jours = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
@@ -262,14 +348,21 @@ const ProgDuJour = () => {
   const iCollectif = tTypes.find(x=>x.id==="collectif").d;
   const taches = p.taches||[];
   const [done,setDone]=useState([]);
+  const [identite,setIdentite]=useState(null);
   const key=`kt_prog_${today()}`;
   useEffect(()=>{store.get(key).then(v=>{if(v)setDone(v);});},[]);
+  useEffect(()=>{store.get("kt_identite").then(v=>{if(v)setIdentite(v);});},[]);
   const toggle=async i=>{
     const n=done.includes(i)?done.filter(x=>x!==i):[...done,i];
     setDone(n);await store.set(key,n);
   };
   const allDone=taches.length>0&&taches.every((_,i)=>done.includes(i));
   const doneCnt=taches.filter((_,i)=>done.includes(i)).length;
+  const completionMsg=(()=>{
+    if(identite&&identite.qualites&&identite.qualites.length)
+      return `✅ Journée complète — un joueur ${identite.qualites[0]} fait exactement ça.`;
+    return "✅ Journée complète — bien joué Titouan !";
+  })();
 
   return <div style={{...card,
     background:allDone
@@ -297,7 +390,7 @@ const ProgDuJour = () => {
     {p.msg&&<div style={{fontSize:12,fontStyle:"italic",color:allDone?"#86efac":C.g400,
       marginBottom:10,lineHeight:1.5,borderLeft:`2px solid ${allDone?"rgba(34,197,94,0.4)":"rgba(59,130,246,0.3)"}`,
       paddingLeft:8,transition:"color .8s,border-color .8s"}}>
-      {allDone?"✅ Journée complète — bien joué Titouan !":p.msg}
+      {allDone?completionMsg:p.msg}
     </div>}
 
     {p.repos
@@ -375,13 +468,9 @@ const Home = ({sess,objs,chk,go,resp}) => {
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
       </div>
       <XPCard sess={sess} chk={chk} objs={objs} resp={resp}/>
-      <div style={{...card,background:"linear-gradient(145deg,rgba(220,38,38,0.12),rgba(15,23,42,0.3))",border:"1px solid rgba(220,38,38,0.2)"}}>
-        <div style={lbl}>Tes super-pouvoirs</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}}>
-          {["Intelligence de jeu","Maîtrise technique","Vitesse"].map(s=><span key={s} style={{background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fca5a5"}}>{s}</span>)}
-        </div>
-      </div>
+      <IdentiteCard />
       <ScoreSemaine sess={sess}/>
+      <AffirmationDuJour />
       <ProgDuJour />
       <div style={{display:"flex",gap:10}}>
         <button onClick={()=>go("train")} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
