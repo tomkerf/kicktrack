@@ -429,10 +429,9 @@ const Respiration = () => {
   const audioRef=useRef(null);
   const DURATION=300;
   const timeLeft=DURATION-elapsed;
-  const phase=breathExpanded?"inspire":"expire";
   const phaseSec=5-(elapsed%5)||5;
 
-  // --- Web Audio ---
+  // --- Web Audio : souffle filtré + drone méditatif ---
   const initAudio=()=>{
     if(audioRef.current)return audioRef.current;
     try{
@@ -440,12 +439,29 @@ const Respiration = () => {
       const master=ctx.createGain();
       master.gain.setValueAtTime(0.001,ctx.currentTime);
       master.connect(ctx.destination);
-      // Fondamentale (ré 146 Hz) + légèrement désaccordée (+3Hz = battement 3Hz méditatif)
-      const mk=(f,vol)=>{const o=ctx.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ctx.currentTime);const g=ctx.createGain();g.gain.setValueAtTime(vol,ctx.currentTime);o.connect(g);g.connect(master);o.start();return o;};
-      const o1=mk(146,0.55); // fondamentale
-      const o2=mk(149,0.35); // +3Hz → battement méditatif
-      const o3=mk(219,0.20); // quinte parfaite (harmonie)
-      audioRef.current={ctx,master,o1,o2,o3};
+
+      // Bruit blanc stéréo → filtre passe-bande = son de souffle naturel
+      const bufLen=ctx.sampleRate*4;
+      const buf=ctx.createBuffer(2,bufLen,ctx.sampleRate);
+      for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<bufLen;i++)d[i]=Math.random()*2-1;}
+      const noise=ctx.createBufferSource();
+      noise.buffer=buf;noise.loop=true;
+      // Filtre passe-bande : fréquence balayée 280→1000 Hz selon la bulle
+      const band=ctx.createBiquadFilter();
+      band.type="bandpass";band.frequency.setValueAtTime(280,ctx.currentTime);band.Q.setValueAtTime(1.4,ctx.currentTime);
+      const lp=ctx.createBiquadFilter();
+      lp.type="lowpass";lp.frequency.setValueAtTime(2200,ctx.currentTime);
+      const noiseGain=ctx.createGain();noiseGain.gain.setValueAtTime(0.22,ctx.currentTime);
+      noise.connect(band);band.connect(lp);lp.connect(noiseGain);noiseGain.connect(master);
+      noise.start();
+
+      // Drone méditatif (type bol tibétain) — harmoniques en A
+      const mkT=(f,g)=>{const o=ctx.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ctx.currentTime);const gn=ctx.createGain();gn.gain.setValueAtTime(g,ctx.currentTime);o.connect(gn);gn.connect(master);o.start();return{o,gn};};
+      const t1=mkT(110,0.20);   // A2 ancrage grave
+      const t2=mkT(220,0.09);   // A3 octave
+      const t3=mkT(330,0.04);   // E4 quinte
+
+      audioRef.current={ctx,master,band,noiseGain,t1,t2,t3};
       return audioRef.current;
     }catch(e){return null;}
   };
@@ -455,14 +471,14 @@ const Respiration = () => {
     const{ctx,master}=audioRef.current;
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value,ctx.currentTime);
-    master.gain.linearRampToValueAtTime(on?0.18:0.001,ctx.currentTime+1.5);
+    master.gain.linearRampToValueAtTime(on?0.22:0.001,ctx.currentTime+1.8);
   };
 
   useEffect(()=>{
     store.get("kt_resp_"+today()).then(v=>{if(v)setSessToday(v);});
     return()=>{
       if(audioRef.current){
-        try{audioRef.current.o1.stop();audioRef.current.o2.stop();audioRef.current.o3.stop();audioRef.current.ctx.close();}catch(e){}
+        try{audioRef.current.ctx.close();}catch(e){}
         audioRef.current=null;
       }
     };
@@ -485,7 +501,7 @@ const Respiration = () => {
     return()=>clearInterval(iv);
   },[running]);
 
-  // Cycle respiration
+  // Cycle respiration 5s
   useEffect(()=>{
     if(!running){setBreathExpanded(false);return;}
     setBreathExpanded(true);
@@ -493,32 +509,30 @@ const Respiration = () => {
     return()=>clearInterval(iv);
   },[running]);
 
-  // Audio fade avec running
+  // Fade audio selon running
   useEffect(()=>{
     if(!musicOn)return;
     if(running){if(audioRef.current)audioRef.current.ctx.resume().catch(()=>{});fadeAudio(true);}
     else fadeAudio(false);
   },[running]);
 
-  // Fréquences suivent le souffle
+  // Son suit exactement la bulle — ramp 4.8s calé sur transition CSS 5s
   useEffect(()=>{
     if(!audioRef.current||!running||!musicOn)return;
-    const{ctx,master,o1,o2,o3}=audioRef.current;
+    const{ctx,band,noiseGain,master}=audioRef.current;
     const now=ctx.currentTime;
-    const dur=4.5;
-    const ramp=(node,from,to)=>{node.cancelScheduledValues(now);node.setValueAtTime(from,now);node.linearRampToValueAtTime(to,now+dur);};
+    const dur=4.8;
+    const ramp=(p,to)=>{p.cancelScheduledValues(now);p.setValueAtTime(p.value,now);p.linearRampToValueAtTime(to,now+dur);};
     if(breathExpanded){
-      // INSPIRE — montée en fréquence + volume
-      ramp(o1.frequency,o1.frequency.value,174);
-      ramp(o2.frequency,o2.frequency.value,177);
-      ramp(o3.frequency,o3.frequency.value,261);
-      ramp(master.gain,master.gain.value,0.26);
+      // INSPIRE : filtre s'ouvre (souffle monte), volume augmente
+      ramp(band.frequency,1000);
+      ramp(noiseGain.gain,0.52);
+      ramp(master.gain,0.28);
     }else{
-      // EXPIRE — descente en fréquence + volume doux
-      ramp(o1.frequency,o1.frequency.value,136);
-      ramp(o2.frequency,o2.frequency.value,139);
-      ramp(o3.frequency,o3.frequency.value,204);
-      ramp(master.gain,master.gain.value,0.09);
+      // EXPIRE : filtre se ferme (souffle descend), volume diminue
+      ramp(band.frequency,280);
+      ramp(noiseGain.gain,0.18);
+      ramp(master.gain,0.10);
     }
   },[breathExpanded]);
 
@@ -526,6 +540,8 @@ const Respiration = () => {
   const secs=timeLeft%60;
   const pct=elapsed/DURATION;
   const started=elapsed>0||running;
+  // cubic-bezier qui imite une vraie respiration : lent aux extrêmes, fluide au centre
+  const breathTr="all 5s cubic-bezier(0.37,0,0.63,1)";
 
   return <div style={{...card,background:"linear-gradient(145deg,rgba(59,130,246,0.12),rgba(15,23,42,0.4))",border:"1px solid rgba(59,130,246,0.25)"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
@@ -536,7 +552,7 @@ const Respiration = () => {
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <button onClick={()=>{
           const next=!musicOn;setMusicOn(next);
-          if(audioRef.current){const{ctx,master}=audioRef.current;master.gain.setTargetAtTime(next&&running?0.18:0.001,ctx.currentTime,0.5);}
+          if(audioRef.current){const{ctx,master}=audioRef.current;master.gain.setTargetAtTime(next&&running?0.22:0.001,ctx.currentTime,0.6);}
         }} style={{background:"none",border:`1px solid ${musicOn?"rgba(59,130,246,0.4)":"rgba(148,163,184,0.2)"}`,borderRadius:14,padding:"4px 10px",color:musicOn?C.blueL:C.g400,fontSize:11,cursor:"pointer",fontWeight:700,lineHeight:1.4}}>
           {musicOn?"♫ Son":"♫ Off"}
         </button>
@@ -548,25 +564,41 @@ const Respiration = () => {
     </div>
 
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
-      <div style={{position:"relative",width:160,height:160,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px solid rgba(59,130,246,0.15)"}}/>
+      {/* Bulle de respiration */}
+      <div style={{position:"relative",width:170,height:170,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        {/* Anneau fixe de référence */}
+        <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px solid rgba(59,130,246,0.12)"}}/>
+        {/* Halo externe qui pulse avec la bulle */}
         <div style={{
-          width:breathExpanded?140:80,
-          height:breathExpanded?140:80,
+          position:"absolute",
+          width:breathExpanded?168:68,
+          height:breathExpanded?168:68,
+          borderRadius:"50%",
+          background:"transparent",
+          boxShadow:breathExpanded?"0 0 55px 18px rgba(59,130,246,0.13)":"0 0 10px 2px rgba(100,116,139,0.04)",
+          transition:breathTr,
+          pointerEvents:"none",
+        }}/>
+        {/* Bulle principale */}
+        <div style={{
+          width:breathExpanded?148:74,
+          height:breathExpanded?148:74,
           borderRadius:"50%",
           background:breathExpanded
-            ?"radial-gradient(circle,rgba(59,130,246,0.35),rgba(29,78,216,0.1))"
-            :"radial-gradient(circle,rgba(148,163,184,0.2),rgba(15,23,42,0.1))",
-          border:breathExpanded?"2px solid rgba(59,130,246,0.6)":"2px solid rgba(148,163,184,0.3)",
-          boxShadow:breathExpanded?"0 0 40px rgba(59,130,246,0.4)":"none",
-          transition:"width 5s ease-in-out,height 5s ease-in-out,box-shadow 2s ease-in-out,border-color 2s ease-in-out",
-          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,
+            ?"radial-gradient(circle at 38% 32%,rgba(186,230,253,0.45),rgba(59,130,246,0.28),rgba(29,78,216,0.08))"
+            :"radial-gradient(circle at 38% 32%,rgba(148,163,184,0.28),rgba(71,85,105,0.12),rgba(15,23,42,0.04))",
+          border:breathExpanded?"1.5px solid rgba(147,197,253,0.55)":"1.5px solid rgba(100,116,139,0.28)",
+          boxShadow:breathExpanded
+            ?"inset 0 -8px 24px rgba(29,78,216,0.18), inset 0 8px 16px rgba(186,230,253,0.12), 0 0 28px rgba(59,130,246,0.28)"
+            :"inset 0 -4px 12px rgba(0,0,0,0.18), inset 0 4px 8px rgba(255,255,255,0.03)",
+          transition:breathTr,
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,
         }}>
           {running&&<>
-            <div style={{fontSize:13,fontWeight:800,color:breathExpanded?"#93c5fd":C.g400,letterSpacing:.5}}>{breathExpanded?"INSPIRE":"EXPIRE"}</div>
-            <div style={{fontSize:22,fontWeight:800,color:breathExpanded?C.blueL:C.g300}}>{phaseSec}</div>
+            <div style={{fontSize:11,fontWeight:800,color:breathExpanded?"#bfdbfe":"#64748b",letterSpacing:.8,transition:"color 1.2s ease"}}>{breathExpanded?"INSPIRE":"EXPIRE"}</div>
+            <div style={{fontSize:24,fontWeight:800,color:breathExpanded?"#93c5fd":"#94a3b8",transition:"color 1.2s ease"}}>{phaseSec}</div>
           </>}
-          {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",padding:"0 12px",lineHeight:1.5}}>Prêt à<br/>commencer</div>}
+          {!running&&!started&&<div style={{fontSize:11,color:C.g400,textAlign:"center",padding:"0 14px",lineHeight:1.6}}>Prêt à<br/>commencer</div>}
           {!running&&started&&<div style={{fontSize:11,color:C.g400}}>En pause</div>}
         </div>
       </div>
