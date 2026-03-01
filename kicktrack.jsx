@@ -279,40 +279,7 @@ const Home = ({sess,objs,chk,go,resp}) => {
         <Stat l="Objectifs" v={actObj} d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M12 16a4 4 0 110-8 4 4 0 010 8z"]} c={C.navy} />
       </div>
       <XPCard sess={sess} chk={chk} objs={objs} resp={resp}/>
-      <ScoreSemaine sess={sess}/>
       <ProgDuJour />
-      <div style={{...card,background:"linear-gradient(145deg,rgba(220,38,38,0.12),rgba(15,23,42,0.3))",border:"1px solid rgba(220,38,38,0.2)"}}>
-        <div style={lbl}>Tes super-pouvoirs</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}}>
-          {["Intelligence de jeu","Maîtrise technique","Vitesse"].map(s=><span key={s} style={{background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:20,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fca5a5"}}>{s}</span>)}
-        </div>
-      </div>
-      {lastM && <div style={card}>
-        <div style={lbl}>Dernier état mental</div>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginTop:8}}>
-          {(()=>{const m=moods.find(x=>x.v===lastM.mood)||moods[2];return <MoodIco d={m.d} v={m.v} s={40}/>;})()}
-          <span style={{fontSize:16,color:C.g700,fontWeight:700}}>{moods.find(m=>m.v===lastM.mood)?.l}</span>
-        </div>
-      </div>}
-      <div style={card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <span style={lbl}>Dernières séances</span>
-          <button onClick={()=>go("train")} style={{background:"none",border:"none",color:C.blue,fontSize:13,fontWeight:600,cursor:"pointer"}}>Voir tout →</button>
-        </div>
-        {!sess.length?<div style={{textAlign:"center",padding:20,color:C.g400}}>
-          <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><TypeIco d={["M12 22a10 10 0 110-20 10 10 0 010 20z","M8 12l2.5 2.5L16 9"]} s={36} c={C.g300}/></div>Aucune séance — c'est parti!
-        </div>:[...sess].reverse().slice(0,3).map(s=>{
-          const t=tTypes.find(x=>x.id===s.type);
-          return <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${C.g100}`}}>
-            <TypeIco d={t?.d||tTypes[0].d} s={24} c={C.blueL}/>
-            <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:600,color:C.g900}}>{t?.l||s.type}</div>
-              <div style={{fontSize:12,color:C.g400}}>{fmtDate(s.date)} · {s.dur} min</div>
-            </div>
-            <div style={{background:"rgba(59,130,246,0.12)",border:"1px solid rgba(59,130,246,0.25)",borderRadius:10,padding:"4px 10px",fontSize:13,fontWeight:700,color:"#60a5fa"}}>{s.int}/10</div>
-          </div>;
-        })}
-      </div>
       <div style={{display:"flex",gap:10}}>
         <button onClick={()=>go("train")} style={{...btnP,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
           <Ico d={iPlus} s={18}/> Séance
