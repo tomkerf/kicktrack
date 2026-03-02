@@ -1173,59 +1173,68 @@ const MatchCard = ({m}) => {
 };
 
 const Resultats = () => {
-  const [matches,setMatches]=useState([]);
+  const [allMatches,setAllMatches]=useState([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(null);
-  const [vue,setVue]=useState("resultats"); // "resultats" | "avenir"
+  const [journee,setJournee]=useState(null);
   const [lastFetch,setLastFetch]=useState(null);
 
   const fetchData = async () => {
     setLoading(true); setError(null);
     try {
-      const now=new Date();
-      const from=new Date(now); from.setDate(from.getDate()-21);
-      const to=new Date(now); to.setDate(to.getDate()+14);
-      const fmt=d=>d.toISOString().split("T")[0];
-      const apiUrl=`${FD_BASE}/competitions/FL1/matches?dateFrom=${fmt(from)}&dateTo=${fmt(to)}&token=${FD_KEY}`;
-      const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`);
+      const res=await fetch(`/api/ligue1?dateFrom=${fmt(from)}&dateTo=${fmt(to)}`);
       if(!res.ok) throw new Error(`Erreur API (${res.status})`);
       const data=await res.json();
-      setMatches(data.matches||[]);
+      const ms=data.matches||[];
+      setAllMatches(ms);
       setLastFetch(Date.now());
+      // Auto-sélectionner la dernière journée terminée
+      const fin=ms.filter(m=>m.status==="FINISHED");
+      if(fin.length>0){
+        setJournee(Math.max(...fin.map(m=>m.matchday)));
+      } else {
+        const up=ms.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED");
+        if(up.length>0) setJournee(Math.min(...up.map(m=>m.matchday)));
+        else if(ms.length>0) setJournee(ms[0].matchday);
+      }
     } catch(e){ setError(e.message); }
     finally{ setLoading(false); }
   };
 
   useEffect(()=>{ fetchData(); },[]);
 
-  const fin=[...matches.filter(m=>m.status==="FINISHED")].reverse();
-  const avenir=matches.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED"||m.status==="IN_PLAY"||m.status==="PAUSED");
-  const shown=vue==="resultats"?fin:avenir;
-
-  // Grouper par journée
-  const grouped=shown.reduce((acc,m)=>{
-    const k=`Journée ${m.matchday}`;
-    if(!acc[k])acc[k]=[];
-    acc[k].push(m); return acc;
-  },{});
+  const journees=[...new Set(allMatches.map(m=>m.matchday))].sort((a,b)=>a-b);
+  const minJ=journees[0]??1;
+  const maxJ=journees[journees.length-1]??38;
+  const msJournee=allMatches.filter(m=>m.matchday===journee);
+  const dateJournee=msJournee.length>0?fmtMatchDate(msJournee[0].utcDate):"";
 
   return <>
     <Header title="Ligue 1" sub="Résultats & Calendrier"/>
     <div style={{padding:"16px 16px 100px"}}>
 
-      {/* Toggle résultats / à venir */}
-      <div style={{display:"flex",gap:6,marginBottom:14,background:"rgba(255,255,255,0.05)",borderRadius:14,padding:4}}>
-        {[{id:"resultats",l:"Résultats"},{id:"avenir",l:"À venir"}].map(v=>(
-          <button key={v.id} onClick={()=>setVue(v.id)} style={{
-            flex:1,padding:"8px 0",borderRadius:10,border:"none",cursor:"pointer",fontSize:13,fontWeight:700,
-            background:vue===v.id?"rgba(59,130,246,0.25)":"transparent",
-            color:vue===v.id?"#60a5fa":C.g400,
-            transition:"all .2s",
-          }}>{v.l}</button>
-        ))}
+      {/* Navigation journée */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,
+        background:"rgba(255,255,255,0.04)",borderRadius:16,padding:"8px 10px"}}>
+        <button onClick={()=>setJournee(j=>Math.max(minJ,j-1))} disabled={!journee||journee<=minJ}
+          style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",
+            borderRadius:10,width:36,height:36,fontSize:20,fontWeight:700,
+            color:(!journee||journee<=minJ)?C.g500:"#94a3b8",cursor:"pointer",flexShrink:0,
+            display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+        <div style={{flex:1,textAlign:"center"}}>
+          <div style={{fontWeight:800,fontSize:15,color:"#f1f5f9"}}>
+            {journee?`Journée ${journee}`:"—"}
+          </div>
+          <div style={{fontSize:11,color:C.g400,marginTop:1}}>{dateJournee}</div>
+        </div>
+        <button onClick={()=>setJournee(j=>Math.min(maxJ,j+1))} disabled={!journee||journee>=maxJ}
+          style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",
+            borderRadius:10,width:36,height:36,fontSize:20,fontWeight:700,
+            color:(!journee||journee>=maxJ)?C.g500:"#94a3b8",cursor:"pointer",flexShrink:0,
+            display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
       </div>
 
-      {/* Refresh + last update */}
+      {/* Refresh */}
       <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginBottom:10}}>
         {lastFetch&&<span style={{fontSize:10,color:C.g300}}>
           Mis à jour {new Date(lastFetch).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
@@ -1248,21 +1257,13 @@ const Resultats = () => {
         <button onClick={fetchData} style={{...btnP,padding:"8px 20px",fontSize:12}}>Réessayer</button>
       </div>}
 
-      {!loading&&!error&&Object.keys(grouped).length===0&&(
+      {!loading&&!error&&msJournee.length===0&&journee&&(
         <div style={{textAlign:"center",padding:"40px 0",color:C.g400,fontSize:13}}>
-          Aucun match sur cette période.
+          Aucun match pour cette journée.
         </div>
       )}
 
-      {!loading&&!error&&Object.entries(grouped).map(([journee,ms])=>(
-        <div key={journee} style={{marginBottom:16}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-            <span style={{...lbl,margin:0}}>{journee}</span>
-            <span style={{fontSize:10,color:C.g300}}>{fmtMatchDate(ms[0].utcDate)}</span>
-          </div>
-          {ms.map(m=><MatchCard key={m.id} m={m}/>)}
-        </div>
-      ))}
+      {!loading&&!error&&msJournee.map(m=><MatchCard key={m.id} m={m}/>)}
     </div>
   </>;
 };
