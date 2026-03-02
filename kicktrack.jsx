@@ -1182,20 +1182,23 @@ const Resultats = () => {
   const fetchData = async () => {
     setLoading(true); setError(null);
     try {
+      const now=new Date();
+      const from=new Date(now); from.setDate(from.getDate()-60);
+      const to=new Date(now);   to.setDate(to.getDate()+60);
+      const fmt=d=>d.toISOString().split("T")[0];
       const res=await fetch(`/api/ligue1?dateFrom=${fmt(from)}&dateTo=${fmt(to)}`);
       if(!res.ok) throw new Error(`Erreur API (${res.status})`);
       const data=await res.json();
       const ms=data.matches||[];
       setAllMatches(ms);
       setLastFetch(Date.now());
-      // Auto-sélectionner la dernière journée terminée
-      const fin=ms.filter(m=>m.status==="FINISHED");
-      if(fin.length>0){
-        setJournee(Math.max(...fin.map(m=>m.matchday)));
+      const finished=ms.filter(m=>m.status==="FINISHED");
+      if(finished.length){
+        const last=Math.max(...finished.map(m=>m.matchday));
+        setJournee(prev=>prev||last);
       } else {
-        const up=ms.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED");
-        if(up.length>0) setJournee(Math.min(...up.map(m=>m.matchday)));
-        else if(ms.length>0) setJournee(ms[0].matchday);
+        const sched=ms.filter(m=>m.status==="SCHEDULED"||m.status==="TIMED");
+        if(sched.length) setJournee(prev=>prev||Math.min(...sched.map(m=>m.matchday)));
       }
     } catch(e){ setError(e.message); }
     finally{ setLoading(false); }
@@ -1204,34 +1207,33 @@ const Resultats = () => {
   useEffect(()=>{ fetchData(); },[]);
 
   const journees=[...new Set(allMatches.map(m=>m.matchday))].sort((a,b)=>a-b);
-  const minJ=journees[0]??1;
-  const maxJ=journees[journees.length-1]??38;
-  const msJournee=allMatches.filter(m=>m.matchday===journee);
-  const dateJournee=msJournee.length>0?fmtMatchDate(msJournee[0].utcDate):"";
+  const minJ=journees[0]||1;
+  const maxJ=journees[journees.length-1]||38;
+  const curJ=journee||minJ;
+
+  const matchesJournee=allMatches.filter(m=>m.matchday===curJ)
+    .sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate));
+
+  const dateJournee=matchesJournee.length?fmtMatchDate(matchesJournee[0].utcDate):"";
 
   return <>
     <Header title="Ligue 1" sub="Résultats & Calendrier"/>
     <div style={{padding:"16px 16px 100px"}}>
 
       {/* Navigation journée */}
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,
-        background:"rgba(255,255,255,0.04)",borderRadius:16,padding:"8px 10px"}}>
-        <button onClick={()=>setJournee(j=>Math.max(minJ,j-1))} disabled={!journee||journee<=minJ}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+        <button onClick={()=>setJournee(j=>Math.max(minJ,j-1))} disabled={curJ<=minJ}
           style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",
-            borderRadius:10,width:36,height:36,fontSize:20,fontWeight:700,
-            color:(!journee||journee<=minJ)?C.g500:"#94a3b8",cursor:"pointer",flexShrink:0,
-            display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+            borderRadius:10,width:36,height:36,fontSize:18,cursor:"pointer",
+            color:curJ<=minJ?C.g300:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
         <div style={{flex:1,textAlign:"center"}}>
-          <div style={{fontWeight:800,fontSize:15,color:"#f1f5f9"}}>
-            {journee?`Journée ${journee}`:"—"}
-          </div>
-          <div style={{fontSize:11,color:C.g400,marginTop:1}}>{dateJournee}</div>
+          <div style={{fontSize:14,fontWeight:800,color:"#f1f5f9"}}>Journée {curJ}</div>
+          {dateJournee&&<div style={{fontSize:10,color:C.g400}}>{dateJournee}</div>}
         </div>
-        <button onClick={()=>setJournee(j=>Math.min(maxJ,j+1))} disabled={!journee||journee>=maxJ}
+        <button onClick={()=>setJournee(j=>Math.min(maxJ,j+1))} disabled={curJ>=maxJ}
           style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",
-            borderRadius:10,width:36,height:36,fontSize:20,fontWeight:700,
-            color:(!journee||journee>=maxJ)?C.g500:"#94a3b8",cursor:"pointer",flexShrink:0,
-            display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+            borderRadius:10,width:36,height:36,fontSize:18,cursor:"pointer",
+            color:curJ>=maxJ?C.g300:"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
       </div>
 
       {/* Refresh */}
@@ -1257,13 +1259,13 @@ const Resultats = () => {
         <button onClick={fetchData} style={{...btnP,padding:"8px 20px",fontSize:12}}>Réessayer</button>
       </div>}
 
-      {!loading&&!error&&msJournee.length===0&&journee&&(
+      {!loading&&!error&&matchesJournee.length===0&&(
         <div style={{textAlign:"center",padding:"40px 0",color:C.g400,fontSize:13}}>
           Aucun match pour cette journée.
         </div>
       )}
 
-      {!loading&&!error&&msJournee.map(m=><MatchCard key={m.id} m={m}/>)}
+      {!loading&&!error&&matchesJournee.map(m=><MatchCard key={m.id} m={m}/>)}
     </div>
   </>;
 };
